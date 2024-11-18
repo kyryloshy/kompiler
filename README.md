@@ -20,7 +20,7 @@ Alongside Kompiler, many low-level compilers exist, such as the GNU Assembly com
 # How to use
 ## Compiling
 Using Kompiler is simple. To compile a program into machine code (after installation), run
-```
+```shell
 kompile input_file.s output_file.bin
 ```
 ## Examples
