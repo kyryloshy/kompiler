@@ -24,4 +24,4 @@ Using Kompiler is simple. To compile a program into machine code (after installa
 kompile input_file.s output_file.bin
 ```
 ## Examples
-You can find examples of writing for Kompiler in the (examples folder)[https://github.com/kyryloshy/kompiler/examples].
+You can find examples of writing for Kompiler in the [examples folder](/examples).
