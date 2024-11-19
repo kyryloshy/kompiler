@@ -1,4 +1,8 @@
-def parse_str(code)
+module Kompiler
+
+class Parsers
+
+def self.parse_str(code)
 
 	# Skip the "
 	i = 1
@@ -37,7 +41,7 @@ def parse_str(code)
 	return [str_content, i + 1]
 end
 
-def get_code_lines(code)
+def self.get_code_lines(code)
 
 	lines = []
 
@@ -76,14 +80,14 @@ def get_code_lines(code)
 end
 
 
-def check_register_operand(str)
-	REGISTERS.each do |register|
+def self.check_register_operand(str)
+	Kompiler::Architecture.registers.each do |register|
 		return [true, register] if str == register[:reg_name]
 	end
 	return [false, nil]
 end
 
-def check_binary_operand(str)
+def self.check_binary_operand(str)
 	return [false, nil] if !str.start_with?("0b")
 	binary = str[2..]
 	
@@ -100,7 +104,7 @@ def check_binary_operand(str)
 end
 
 
-def check_hex_operand(str)
+def self.check_hex_operand(str)
 	return [false, nil] if !str.start_with?("0x")
 	hex = str[2..].downcase
 	
@@ -118,7 +122,7 @@ def check_hex_operand(str)
 end
 
 
-def check_decimal_operand(str)
+def self.check_decimal_operand(str)
 	minus_sign = false
 	
 	# Check if the string starts with a minus sign. If yes remove it and set minus_sign to true
@@ -138,7 +142,7 @@ def check_decimal_operand(str)
 end
 
 
-def check_immediate_operand(operand_str)
+def self.check_immediate_operand(operand_str)
 	
 	is_bin, bin_value = check_binary_operand(operand_str)
 	return [true, {type: "immediate", value: bin_value, def_type: "binary"}] if is_bin
@@ -153,7 +157,7 @@ def check_immediate_operand(operand_str)
 end
 
 
-def check_label_operand(str)
+def self.check_label_operand(str)
 	# If first character is a number, return false
 	return false if ("0".."9").to_a.include?(str[0])
 
@@ -170,7 +174,7 @@ def check_label_operand(str)
 end
 
 
-def parse_operand_str(operand_str)
+def self.parse_operand_str(operand_str)
 	
 	
 	# Check if the operand is a register
@@ -202,7 +206,7 @@ end
 
 
 
-def parse_instruction_line(line)
+def self.parse_instruction_line(line)
 	keyword = ""
 	i = 0
 	
@@ -288,7 +292,7 @@ end
 
 
 
-# def parse_instruction_line(line)
+# def self.parse_instruction_line(line)
 # 	keyword = ""
 # 	i = 0
 # 	
@@ -379,7 +383,7 @@ end
 
 
 
-def check_operand_match(operand_description, operand)
+def self.check_operand_match(operand_description, operand)
 
 	# If operand type doesn't not match, return false
 	return false if operand[:type] != operand_description[:type]
@@ -418,7 +422,7 @@ end
 
 # Returns array of [status, operands]
 # If status = false, operands = nil; otherwise, status = true, operands = instruction operands
-def match_instruction(line, instruction)
+def self.match_instruction(line, instruction)
 
 	keyword, operands = parse_instruction_line(line)
 
@@ -443,12 +447,12 @@ end
 
 
 
-def check_instruction(line)
+def self.check_instruction(line)
 	
 	instruction = nil
 	operands = nil
 	
-	INSTRUCTIONS.each do |curr_instruction|
+	Kompiler::Architecture.instructions.each do |curr_instruction|
 		# If the instruction matches - break
 		status, curr_operands = match_instruction(line, curr_instruction)
 		if status == true
@@ -467,7 +471,7 @@ end
 
 
 
-def check_directive(line)
+def self.check_directive(line)
 	status = parse_instruction_line(line)
 
 	return [false, nil] if status == false
@@ -480,7 +484,7 @@ def check_directive(line)
 	
 	directive = nil
 	
-	DIRECTIVES.each do |curr_directive|
+	Kompiler::Directives.directives.each do |curr_directive|
 		if curr_directive[:keyword] == keyword
 			directive = curr_directive
 			break
@@ -493,3 +497,9 @@ def check_directive(line)
 		return [true, {directive: directive, operands: operands}]
 	end
 end
+
+
+end # End Kompiler::Parsers
+
+
+end # End Kompiler

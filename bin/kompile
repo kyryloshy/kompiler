@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+
+require 'kompiler'
+
+in_filename = ARGV[0]
+out_filename = ARGV[1]
+arch_name = ARGV[2] || "armv8a"
+
+if !in_filename
+	puts "Error: No input file provided"
+	exit
+end
+
+if !out_filename
+	puts "Error: No output file provided"
+	exit
+end
+
+if !File.exist?(in_filename)
+	puts "Error: #{in_filename} doesn't exist"
+	exit
+end
+
+
+code = File.read(in_filename)
+
+begin
+	Kompiler::Architecture.load_arch(arch_name)
+rescue LoadError => e
+	puts "Error: Architecture \"#{arch_name}\" not found"
+end
+
+compiled_bytes_str = Kompiler::CompilerFunctions.compile(code, [in_filename])
+
+File.open(out_filename, "wb") do |file|
+	file.write compiled_bytes_str
+end

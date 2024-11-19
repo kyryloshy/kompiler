@@ -1,4 +1,12 @@
-DIRECTIVES = [
+module Kompiler
+
+class Directives
+
+def self.directives
+	@@DIRECTIVES
+end
+
+@@DIRECTIVES = [
 	{
 		keyword: "zeros",
 		func: lambda do |operands, state|
@@ -149,3 +157,8 @@ DIRECTIVES = [
 		end
 	}
 ]
+
+
+end # Kompiler::Directives
+
+end # Kompiler

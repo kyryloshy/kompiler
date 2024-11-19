@@ -1,0 +1,5 @@
+require 'kompiler/mc_builder.rb'
+require 'kompiler/parsers.rb'
+require 'kompiler/compiler_functions.rb'
+require 'kompiler/architecture.rb'
+require 'kompiler/directives.rb'

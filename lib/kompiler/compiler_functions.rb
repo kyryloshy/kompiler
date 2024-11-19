@@ -1,4 +1,8 @@
-def parse_includes(lines, loaded_files=[])
+module Kompiler
+
+class CompilerFunctions
+
+def self.parse_includes(lines, loaded_files=[])
 	
 	final_lines = lines.dup	
 	
@@ -9,7 +13,7 @@ def parse_includes(lines, loaded_files=[])
 		
 		line = final_lines[line_i]
 		
-		keyword, operands = parse_instruction_line(line)
+		keyword, operands = Kompiler::Parsers.parse_instruction_line(line)
 		
 		if keyword == false
 			line_i += 1
@@ -57,7 +61,7 @@ def parse_includes(lines, loaded_files=[])
 			include_code = File.read(full_file_name)
 			
 			# Separate the lines inside it
-			include_code_lines = get_code_lines(include_code)
+			include_code_lines = Kompiler::Parsers.get_code_lines(include_code)
 			
 			# Add the lines from the load file to the lines array at the line_i index, effectively replacing the load command with the content of the load file
 			final_lines.insert next_i_insert, *include_code_lines
@@ -77,7 +81,7 @@ end
 
 
 
-def parse_code(lines)	
+def self.parse_code(lines)	
 	
 	parsed_lines = []
 	
@@ -102,7 +106,7 @@ def parse_code(lines)
 		# 	next
 		# end
 	
-		is_instruction, exec_instruction = check_instruction(line)
+		is_instruction, exec_instruction = Kompiler::Parsers.check_instruction(line)
 		if is_instruction
 			parsed_lines << {type: "instruction", instruction: exec_instruction[:instruction], operands: exec_instruction[:operands], address: instr_adr}			
 			instr_adr += exec_instruction[:instruction][:bitsize] / 8
@@ -111,7 +115,7 @@ def parse_code(lines)
 		end
 		
 		
-		is_directive, directive_hash = check_directive(line)
+		is_directive, directive_hash = Kompiler::Parsers.check_directive(line)
 		if is_directive
 			directive = directive_hash[:directive]
 			operands = directive_hash[:operands]
@@ -138,7 +142,7 @@ def parse_code(lines)
 end
 
 
-def get_labels(parsed_lines)
+def self.get_labels(parsed_lines)
 
 	label_definitions = parsed_lines.filter{|line| line[:type] == "label"}
 	
@@ -156,7 +160,7 @@ def get_labels(parsed_lines)
 end
 
 
-def construct_program_mc(parsed_lines, labels)
+def self.construct_program_mc(parsed_lines, labels)
 	
 	lines_bytes = ""
 	
@@ -171,7 +175,7 @@ def construct_program_mc(parsed_lines, labels)
 			
 			mc_constructor = line[:instruction][:mc_constructor]
 			
-			instr_bits = build_mc(mc_constructor, program_state)			
+			instr_bits = Kompiler::MachineCode_AST.build_mc(mc_constructor, program_state)			
 
 			instr_bytes = bits_to_bytes(instr_bits)
 			
@@ -191,7 +195,7 @@ def construct_program_mc(parsed_lines, labels)
 end
 
 
-def bits_to_bytes(bits)
+def self.bits_to_bytes(bits)
 
 	bit_byte_groups = (0...(bits.size / 8)).map{|byte_i| bits[(byte_i * 8)...(byte_i * 8 + 8)] }
 
@@ -210,7 +214,7 @@ def bits_to_bytes(bits)
 end
 
 
-def bit_lines_to_bytes(bit_lines)
+def self.bit_lines_to_bytes(bit_lines)
 	
 	bits_flat = bit_lines.flatten
 	
@@ -232,11 +236,11 @@ def bit_lines_to_bytes(bit_lines)
 end
 
 
-def compile(code, filename="")
+def self.compile(code, included_files=[])
 
-	lines = get_code_lines(code)
+	lines = Kompiler::Parsers.get_code_lines(code)
 
-	final_lines = parse_includes(lines, [File.expand_path(filename)])
+	final_lines = parse_includes(lines, included_files.map{|fname| File.expand_path(fname)})
 
 	parsed_lines = parse_code(final_lines)
 	
@@ -248,3 +252,8 @@ def compile(code, filename="")
 
 	machine_code_bytes = construct_program_mc(parsed_lines, labels)
 end
+
+
+end # Kompiler::CompilerFunctions
+
+end # Kompiler

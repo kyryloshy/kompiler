@@ -1,3 +1,6 @@
+module Kompiler
+
+class MachineCode_AST
 
 MC_AST_NODES = [
 	{name: "get_operand", n_args: 1, func: lambda {|args, state| state[:operands][args[0]][:value]} },
@@ -25,16 +28,16 @@ MC_AST_NODES = [
 	{name: "raise_error", n_args: 1, func: lambda {|args, state| raise args[0] } },
 ]
 
-def is_ast_node(val)
+def self.is_ast_node(val)
 	val.is_a?(Array) && (val.size >= 1) && val[0].is_a?(String)
 end
 
 # If an argument is a node, evaluates it. Otherwise just returns the argument
-def eval_mc_node_arg(arg, state)
+def self.eval_mc_node_arg(arg, state)
 	is_ast_node(arg) ? run_mc_ast(arg, state) : arg
 end
 
-def run_mc_ast(node, state)
+def self.run_mc_ast(node, state)
 	
 	node_name = node[0]
 	node_args = node[1..]
@@ -58,7 +61,7 @@ def run_mc_ast(node, state)
 end
 
 
-def build_mc(mc_constructor, state)
+def self.build_mc(mc_constructor, state)
 	final = []
 	mc_constructor.each do |ast_node|		
 		
@@ -75,3 +78,8 @@ def build_mc(mc_constructor, state)
 	
 	return final
 end
+
+
+end # Kompiler::MC_AST
+
+end # Kompiler

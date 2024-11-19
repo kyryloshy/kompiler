@@ -1,4 +1,12 @@
-INSTRUCTIONS = [
+module Kompiler
+
+class ARMv8A
+	
+def self.instructions
+	@@instructions
+end
+	
+@@instructions = [
 	{	keyword: "mov",
 		operands: [{type: "register", restrictions: {reg_size: 64}}, {type: "immediate", restrictions: {}}],
 		mc_constructor: [
@@ -473,3 +481,7 @@ INSTRUCTIONS = [
 		bitsize: 32
 	},
 ]
+
+end # Kompiler::ARMv8A
+
+end # Kompiler
