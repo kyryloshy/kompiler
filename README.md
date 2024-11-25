@@ -15,7 +15,10 @@ Kompiler is a tool which can compile a low-level programming language into machi
 Alongside Kompiler, many low-level compilers exist, such as the GNU Assembly compiler, Clang, NASM, and so on. In comparison to them, Kompiler has a relatively low footprint, and is significantly faster in certain areas: for example, embedding a 6 megabyte image into your machine code takes around 9 seconds with Clang, but just less than a second with Kompiler.
 
 # Install
-
+To install Kompiler through RubyGems, run:
+```shell
+gem install kompiler
+```
 
 # How to use
 ## Compiling
