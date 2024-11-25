@@ -19,7 +19,7 @@ require 'kompiler'
 # Print the help screen if requested
 if (ARGV.size == 1) && ["--help", "-h"].include?(ARGV[0])
 puts """
-Usage: kompile [options] [<input_file> <output_file> [architecture]]
+Usage: kompile [options] | [<input_file> <output_file> [architecture]]
 
 Available options:
  --help, -h				Prints this screen
