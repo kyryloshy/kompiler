@@ -1,13 +1,13 @@
 Gem::Specification.new do |s|
 	s.name        = "kompiler"
-	s.version     = "0.0.0"
+	s.version     = "0.1.0"
 	s.summary     = "Kir's compiler for low-level machine code"
 	s.description = <<~EOF
 	Kompiler is a low-level, modular and extendable compiler for any architecture. By default Kompiler supports ARMv8-a, but other architecture extensions can be downloaded in the future.
 	EOF
 	s.authors     = ["Kyryl Shyshko"]
 	s.email       = "kyryloshy@gmail.com"
-	s.files       = ["lib/kompiler.rb", "LICENSE"] + Dir["lib/kompiler/*"] + Dir["lib/kompiler/arch/armv8a/*"]
+	s.files       = ["lib/kompiler.rb", "LICENSE"] + Dir["lib/kompiler/*"] + Dir["lib/kompiler/arch_entries/*"] + Dir["lib/kompiler/architectures/armv8a/*"]
 	s.executables << "kompile"
 	s.homepage    = "https://github.com/kyryloshy/kompiler"
 	s.license     = "Apache-2.0"

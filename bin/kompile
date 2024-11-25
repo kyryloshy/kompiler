@@ -16,6 +16,39 @@
 
 require 'kompiler'
 
+# Print the help screen if requested
+if (ARGV.size == 1) && ["--help", "-h"].include?(ARGV[0])
+puts """
+Usage: kompile [options] [<input_file> <output_file> [architecture]]
+
+Available options:
+ --help, -h				Prints this screen
+ --list-architectures	Prints available architectures
+ -L						Alias to --list-architectures
+
+To compile, run:
+ kompile <input_file> <output_file> [architecture]
+
+Arguments:
+ <input_file>			The path to the input file
+ <output_file>			The path where the compiled output will be saved
+ [architecture]			(Optional) One of the installed architectures to use for compilation (defaults to \"armv8a\")
+"""
+exit # Exit
+end
+
+
+# Print the available architectures if requested
+if (ARGV.size == 1) && ["--list-architectures", "-L"].include?(ARGV[0])
+	Kompiler::ArchManager.load_all_entries()
+	puts "Available architectures:"
+	
+	Kompiler::ArchManager.entries.each do |entry|
+		puts " #{entry[:name]}"
+	end
+	exit # Exit
+end
+
 in_filename = ARGV[0]
 out_filename = ARGV[1]
 arch_name = ARGV[2] || "armv8a"
@@ -35,14 +68,30 @@ if !File.exist?(in_filename)
 	exit
 end
 
+# Load all the architecture entries
+
+Kompiler::ArchManager.load_all_entries()
+
+# Find the right architecture
+arch = Kompiler::ArchManager.get_arch(arch_name)
+
+if arch == nil
+	puts "Error: Architecture \"#{arch_name}\" not found."
+	exit
+end
+
+# Get the include path for the architecture
+arch_include_path = arch[:include_path]
+
+# Load the architecture
+begin
+	require arch_include_path
+rescue LoadError => e
+	puts "Error: Could not load #{arch_name} architecture's configuration."
+	exit
+end
 
 code = File.read(in_filename)
-
-begin
-	Kompiler::Architecture.load_arch(arch_name)
-rescue LoadError => e
-	puts "Error: Architecture \"#{arch_name}\" not found"
-end
 
 compiled_bytes_str = Kompiler::CompilerFunctions.compile(code, [in_filename])
 
