@@ -40,7 +40,9 @@ mov x0, 0
 ```
 
 **WARNING!**
+
 If the load directive is done as the first line (or at the start), the loaded file WILL be loaded at the start. For example, with files:
+
 main.s:
 ```
 load "outside_file.s"
@@ -69,6 +71,7 @@ So, the mov instruction will be executed first!
 ## Example using include_end/load_end
 To prevent the behavior that will happen with the include and load directives, the directives load_end and include_end exist.
 Using load_end will place the code of the given file at the end of the current program. For example, having files:
+
 main.s:
 ```
 load_end "outside_file.s"
