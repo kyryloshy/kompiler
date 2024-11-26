@@ -4,8 +4,8 @@
 This part describes what directives are, and the specific features available with Kompiler.
 
 ## What are directives?
-Directives are a way to influence and change the program's final machine code in a way the programmer needs.
-For example, embedding a string to print in the console can be done with a directive. Embedding a large number to load into a register can be done with a directive. And so on.
+Directives are a way to influence and change the program's final machine code in a way the programmer needs.<br>
+For example, embedding a string to print in the console can be done with a directive. Embedding a large number to load into a register can be done with a directive. And so on.<br>
 There's a pre-defined list of directives that Kompiler supports.
 
 ## How to use directives
