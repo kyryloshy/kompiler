@@ -7,7 +7,7 @@ This file explains the general structure / syntax of everything in Kompiler
 Comments start with '//'. Everything from '//' to a newline character is a comment
 
 ## 2. Structure
-Everything except a comment or an empty line is interpreted as a code line.
+Everything except a comment or an empty line is interpreted as a code line.<br>
 Each code line follows the same pattern:
 ```
 keyword operand_1, operand_2, operand_3, ...
@@ -30,7 +30,7 @@ Register operands are a pre-defined set of names, specific to the architecture u
  
 ### 3.2 Immediate value operands
  
-Immediate operands are constant values used directly in an instruction (e.g., Add *23* to the register X0). While they can be any value the programmer chooses, the size of immediate values is often limited by the instruction encoding, which imposes a constraint on how large the value can be.
+Immediate operands are constant values used directly in an instruction (e.g., Add **23** to the register X0). While they can be any value the programmer chooses, the size of immediate values is often limited by the instruction encoding, which imposes a constraint on how large the value can be.<br>
 Currently, immediate value operands can be denoted in three ways:
  - Decimal: 73716253
  - Binary: 0b00110011100
@@ -38,7 +38,7 @@ Currently, immediate value operands can be denoted in three ways:
  
 ### 3.3 String operands
 
-String operands are a sequence of characters, which are mostly used with directives ([described in part 4](/docs/basics/04_directives.md)), since CPU instruction logic usually doesn't apply to them.
+String operands are a sequence of characters, which are mostly used with directives ([described in part 4](/docs/basics/04_directives.md)), since CPU instruction logic usually doesn't apply to them.<br>
 To denote a string, use double quotation marks (") with the content inside:
 ```
 "This is a string"
@@ -46,7 +46,7 @@ To denote a string, use double quotation marks (") with the content inside:
 
 ### 3.4 Label operands
 
-Labels are used to mark different locations or 'checkpoints' in your program. Label names can be made out of letters, underscores and digits.
+Labels are used to mark different locations or 'checkpoints' in your program. Label names can be made out of letters, underscores and digits.<br>
 An example label operand might look like this:
 ```
 label_name123

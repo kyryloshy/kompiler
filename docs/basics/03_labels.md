@@ -5,8 +5,8 @@ This page explains how to define and use labels.
 
 ## Information
 
-To keep track of the current and next instruction to execute, CPUs have a special register called PC (Program Counter), which contains the address for the current instruction. With every instruction, the PC increases to reflect a new instruction.
-To avoid misunderstandings, Kompiler also keeps an address of the current instruction. By default, Kompiler starts with PC set to 0.
+To keep track of the current and next instruction to execute, CPUs have a special register called PC (Program Counter), which contains the address for the current instruction. With every instruction, the PC increases to reflect a new instruction.<br>
+To avoid misunderstandings, Kompiler also keeps an address of the current instruction. By default, Kompiler starts with PC set to 0.<br>
 
 ## What are labels for?
 
@@ -39,8 +39,8 @@ ldr x0, label_name // Loads the first 8 bytes from the address of label_name int
 
 
 ## Important note
-Labels don't actually change the machine code's content in any way
-The PC isn't changed after a label is defined, as is the machine code - everything stays the same
+Labels don't actually change the machine code's content in any way.<br>
+The PC isn't changed after a label is defined, as is the machine code - everything stays the same.
 
 
 
