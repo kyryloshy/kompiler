@@ -17,7 +17,7 @@ To include other files, you can use these directives:
 Most of the time, or in 'library-like' design, I recommend using load_end or include_end, since it can be done at the start of the program for comfort, while keeping everything untouched.
 
 ## Example using include/load
-Let's see how using the include directive affects our final program. Let's assume we have these files:
+Let's see how using the include directive affects our final program. Let's assume we have these files:<br>
 main.s:
 ```
 b outside_label
