@@ -3,16 +3,13 @@ Kir's compiler for low-level ARM machine code. Kompiler is a modular tool writte
 
 # Contents
  - [Description](#description)
- - [Comparison](#comparison)
  - [Install](#install)
  - [How to use](#how_to_use)
+ - [Documentation](#documentation)
  
 
 # Description
-Kompiler is a tool which can compile a low-level programming language into machine code. Each instructions written in the language will reflect the resulting machine code in a very predictable way.
-
-# Comparison
-Alongside Kompiler, many low-level compilers exist, such as the GNU Assembly compiler, Clang, NASM, and so on. In comparison to them, Kompiler has a relatively low footprint, and is significantly faster in certain areas: for example, embedding a 6 megabyte image into your machine code takes around 9 seconds with Clang, but just less than a second with Kompiler.
+Kompiler is a tool which can compile a low-level programming language into machine code. Each instructions written in the language will directly reflect the resulting machine code in a predictable way.
 
 # Install
 To install Kompiler through RubyGems, run:
@@ -21,10 +18,14 @@ gem install kompiler
 ```
 
 # How to use
-## Compiling
 Using Kompiler is simple. To compile a program into machine code (after installation), run
 ```shell
 kompile input_file.s output_file.bin
 ```
-## Examples
-You can find examples of writing for Kompiler in the [examples folder](/examples).
+For further information, run
+```
+kompile --help
+```
+
+# Documentation
+You can find the basics and examples of programming with Kompiler in the [docs directory](/docs).
