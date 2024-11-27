@@ -298,6 +298,19 @@ end
 		bitsize: 32
 	},
 	{
+		keyword: "ldrb",
+		name: "Load Register Byte",
+		description: "Loads a byte from memory and writes the result to the destination register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_size: 64, reg_type: "gpr"}, name: "Source address"}],
+		mc_constructor: [
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
+			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
+			["get_bits", 0, 0, 12], # Immediate offset zero			
+			["bits", 1,0, 1,0, 0, 1,1,1, 0,0],
+		],
+		bitsize: 32
+	},
+	{
 		keyword: "strh",
 		operands: [{type: "register", restrictions: {reg_size: 32}}, {type: "register", restrictions: {reg_size: 64}}],
 		mc_constructor: [
