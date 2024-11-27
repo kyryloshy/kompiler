@@ -451,6 +451,22 @@ end
 		bitsize: 32
 	},
 	
+	{
+		keyword: "mul",
+		name: "MUL",
+		description: "Multiply the contents of two registers and store the output in the destination register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}}, {type: "register", restrictions: {reg_type: "gpr"}}, {type: "register", restrictions: {reg_type: "gpr"}}],
+		mc_constructor: [
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5], # Rd
+			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5], # Rn
+			["bits", 1,1,1,1,1, 0], # Ra o0
+			["get_bits", ["encode_gp_register", ["get_operand", 2]], 0, 5], # Rm
+			["bits", 0,0,0, 1,1,0,1,1, 0,0],
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], []], # SF = 1 if 64-bit
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], 32, ["bits", 0], []], # SF = 0 if 32-bit
+		],
+		bitsize: 32
+	},
 	
 	
 	#

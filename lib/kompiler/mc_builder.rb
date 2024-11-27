@@ -29,6 +29,7 @@ MC_AST_NODES = [
 	{name: "bits", n_args: "any", func: lambda {|args, state| args } },
 	{name: "if_eq_else", n_args: 4, eval_args: false, func: lambda {|args, state| (eval_mc_node_arg(args[0], state) == eval_mc_node_arg(args[1], state)) ? eval_mc_node_arg(args[2], state) : eval_mc_node_arg(args[3], state) }},
 	{name: "raise_error", n_args: 1, func: lambda {|args, state| raise args[0] } },
+	{name: "get_key", n_args: 2, func: lambda {|args, state| args[0][args[1]] }},
 ]
 
 def self.is_ast_node(val)
