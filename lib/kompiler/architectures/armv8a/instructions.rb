@@ -449,6 +449,26 @@ end
 	},
 	
 	{
+		keyword: "sub",
+		name: "Subtract (register)",
+		description: "Subtract the second register value from the first register value, and store the result in the destination register",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Register 1 (Source)"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Register 2 (To subtract)"}],
+		mc_constructor: [
+			# Check for size
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "sub Error: Register sizes are not the same"]], 
+			["if_eq_else", ["get_key", ["get_operand", 1], :reg_size], ["get_key", ["get_operand", 2], :reg_size], [], ["raise_error", "sub Error: Register sizes are not the same"]],
+
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5], # Rd
+			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5], # Rn
+			["get_bits", 0, 0, 6], # shift amount zero
+			["get_bits", ["encode_gp_register", ["get_operand", 2]], 0, 5], # Rm
+			["bits", 0, 0,0, 1,1,0,1,0, 0, 1],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # sf
+		],
+		bitsize: 32
+	},
+	
+	{
 		keyword: "mul",
 		name: "Multiply",
 		description: "Multiply the contents of two registers, and store the output in the destination register.",
