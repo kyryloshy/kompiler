@@ -497,8 +497,8 @@ end
 	
 	{
 		keyword: "b.eq",
-		name: "Branch with condition",
-		description: "Branches to a label if the condition (equality) is met",
+		name: "Branch if equal (label)",
+		description: "Branches to a label if the condition is met",
 		operands: [{type: "label"}],
 		mc_constructor: [
 			["if_eq_else", ["modulo", ["subtract", ["get_label_address", ["get_operand", 0]], ["get_current_address"]], 4], 0, [], ["raise_error", "Can't branch to the address - offset not divisible by 4 bytes."]], # Check if address is accessible
@@ -511,8 +511,9 @@ end
 	},
 	{
 		keyword: "b.eq",
+		name: "Branch if equal (immediate)",
+		description: "Changes the PC relatively by the immediate value if the condition is met",
 		operands: [{type: "immediate"}],
-		description: "Changes the PC relatively by the immediate value if the condition is met (equality)",
 		mc_constructor: [
 			["bits", 0,0,0,0], # eq condition
 			["bits", 0],
@@ -521,6 +522,155 @@ end
 		],
 		bitsize: 32
 	},
+	
+	
+	{
+		keyword: "b.ne",
+		name: "Branch if not equal (label)",
+		description: "Branches to a label if the condition is met",
+		operands: [{type: "label"}],
+		mc_constructor: [
+			["if_eq_else", ["modulo", ["subtract", ["get_label_address", ["get_operand", 0]], ["get_current_address"]], 4], 0, [], ["raise_error", "Can't branch to the address - offset not divisible by 4 bytes."]], # Check if address is accessible
+			["bits", 1,0,0,0], # condition
+			["bits", 0],
+			["get_bits", ["divide", ["subtract", ["get_label_address", ["get_operand", 0]], ["get_current_address"]], 4], 0, 19],
+			["bits", 0, 0,1,0,1,0,1,0],
+		],
+		bitsize: 32
+	},
+	{
+		keyword: "b.ne",
+		name: "Branch if not equal (immediate)",
+		description: "Changes the PC relatively by the immediate value if the condition is met",
+		operands: [{type: "immediate"}],
+		mc_constructor: [
+			["bits", 1,0,0,0], # condition
+			["bits", 0],
+			["get_bits", ["get_operand", 0], 0, 19],
+			["bits", 0, 0,1,0,1,0,1,0],
+		],
+		bitsize: 32
+	},
+	
+	
+	{
+		keyword: "b.ge",
+		name: "Branch if greater or equal (label)",
+		description: "Branches to a label if the condition is met",
+		operands: [{type: "label"}],
+		mc_constructor: [
+			["if_eq_else", ["modulo", ["subtract", ["get_label_address", ["get_operand", 0]], ["get_current_address"]], 4], 0, [], ["raise_error", "Can't branch to the address - offset not divisible by 4 bytes."]], # Check if address is accessible
+			["bits", 0,1,0,1], # condition
+			["bits", 0],
+			["get_bits", ["divide", ["subtract", ["get_label_address", ["get_operand", 0]], ["get_current_address"]], 4], 0, 19],
+			["bits", 0, 0,1,0,1,0,1,0],
+		],
+		bitsize: 32
+	},
+	{
+		keyword: "b.ge",
+		name: "Branch if greater or equal (immediate)",
+		description: "Changes the PC relatively by the immediate value if the condition is met",
+		operands: [{type: "immediate"}],
+		mc_constructor: [
+			["bits", 0,1,0,1], # condition
+			["bits", 0],
+			["get_bits", ["get_operand", 0], 0, 19],
+			["bits", 0, 0,1,0,1,0,1,0],
+		],
+		bitsize: 32
+	},
+	
+	
+	
+	{
+		keyword: "b.lt",
+		name: "Branch if less than (label)",
+		description: "Branches to a label if the condition is met",
+		operands: [{type: "label"}],
+		mc_constructor: [
+			["if_eq_else", ["modulo", ["subtract", ["get_label_address", ["get_operand", 0]], ["get_current_address"]], 4], 0, [], ["raise_error", "Can't branch to the address - offset not divisible by 4 bytes."]], # Check if address is accessible
+			["bits", 1,1,0,1], # condition
+			["bits", 0],
+			["get_bits", ["divide", ["subtract", ["get_label_address", ["get_operand", 0]], ["get_current_address"]], 4], 0, 19],
+			["bits", 0, 0,1,0,1,0,1,0],
+		],
+		bitsize: 32
+	},
+	{
+		keyword: "b.lt",
+		name: "Branch if less than (immediate)",
+		description: "Changes the PC relatively by the immediate value if the condition is met",
+		operands: [{type: "immediate"}],
+		mc_constructor: [
+			["bits", 1,1,0,1], # condition
+			["bits", 0],
+			["get_bits", ["get_operand", 0], 0, 19],
+			["bits", 0, 0,1,0,1,0,1,0],
+		],
+		bitsize: 32
+	},
+	
+	
+	
+	
+	{
+		keyword: "b.gt",
+		name: "Branch if greater than (label)",
+		description: "Branches to a label if the condition is met",
+		operands: [{type: "label"}],
+		mc_constructor: [
+			["if_eq_else", ["modulo", ["subtract", ["get_label_address", ["get_operand", 0]], ["get_current_address"]], 4], 0, [], ["raise_error", "Can't branch to the address - offset not divisible by 4 bytes."]], # Check if address is accessible
+			["bits", 0,0,1,1], # condition
+			["bits", 0],
+			["get_bits", ["divide", ["subtract", ["get_label_address", ["get_operand", 0]], ["get_current_address"]], 4], 0, 19],
+			["bits", 0, 0,1,0,1,0,1,0],
+		],
+		bitsize: 32
+	},
+	{
+		keyword: "b.gt",
+		name: "Branch if greater than (immediate)",
+		description: "Changes the PC relatively by the immediate value if the condition is met",
+		operands: [{type: "immediate"}],
+		mc_constructor: [
+			["bits", 0,0,1,1], # condition
+			["bits", 0],
+			["get_bits", ["get_operand", 0], 0, 19],
+			["bits", 0, 0,1,0,1,0,1,0],
+		],
+		bitsize: 32
+	},
+	
+	
+	{
+		keyword: "b.le",
+		name: "Branch if less or equal (label)",
+		description: "Branches to a label if the condition is met",
+		operands: [{type: "label"}],
+		mc_constructor: [
+			["if_eq_else", ["modulo", ["subtract", ["get_label_address", ["get_operand", 0]], ["get_current_address"]], 4], 0, [], ["raise_error", "Can't branch to the address - offset not divisible by 4 bytes."]], # Check if address is accessible
+			["bits", 1,0,1,1], # condition
+			["bits", 0],
+			["get_bits", ["divide", ["subtract", ["get_label_address", ["get_operand", 0]], ["get_current_address"]], 4], 0, 19],
+			["bits", 0, 0,1,0,1,0,1,0],
+		],
+		bitsize: 32
+	},
+	{
+		keyword: "b.le",
+		name: "Branch if less or equal (immediate)",
+		description: "Changes the PC relatively by the immediate value if the condition is met",
+		operands: [{type: "immediate"}],
+		mc_constructor: [
+			["bits", 1,0,1,1], # condition
+			["bits", 0],
+			["get_bits", ["get_operand", 0], 0, 19],
+			["bits", 0, 0,1,0,1,0,1,0],
+		],
+		bitsize: 32
+	},
+	
 ]
 
 end # Kompiler::ARMv8A
