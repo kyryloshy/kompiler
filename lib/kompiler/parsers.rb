@@ -22,6 +22,8 @@ def self.parse_str(code)
 				str_content << "\r"
 			elsif code[i] == "\\"
 				str_content << "\\"
+			elsif code[i] == "0"
+				str_content << "\0"
 			else
 				str_content << "\\"
 				str_content << code[i]
@@ -145,6 +147,29 @@ def self.check_decimal_operand(str)
 end
 
 
+def self.check_char_operand(str)
+
+	# If doesn't start with ' or doesn't end with ', return false
+	if (str[0] != "'") || (str[-1] != "'")
+		return [false, nil]
+	end
+
+	# Use existing logic to parse the contents
+	to_parse = str.dup
+	to_parse[0] = '"'
+	to_parse[-1] = '"'
+	content, parse_i = parse_str(to_parse)
+	
+	# If more than one character, return false
+	if content.size != 1
+		return [false, nil]
+	end
+
+	return [true, content.encode("ascii").bytes[0]]
+end
+
+
+
 def self.check_immediate_operand(operand_str)
 	
 	is_bin, bin_value = check_binary_operand(operand_str)
@@ -155,6 +180,9 @@ def self.check_immediate_operand(operand_str)
 	
 	is_hex, hex_value = check_hex_operand(operand_str)
 	return [true, {type: "immediate", value: hex_value, def_type: "hex"}] if is_hex
+	
+	is_char, char_value = check_char_operand(operand_str)
+	return [true, {type: "immediate", value: char_value, def_type: "char"}] if is_char
 	
 	return [false, nil]
 end
