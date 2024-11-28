@@ -275,33 +275,28 @@ end
 		],
 		bitsize: 32
 	},
+	
 	{
 		keyword: "ldr",
-		operands: [{type: "register", restrictions: {reg_size: 64}}, {type: "register", restrictions: {reg_size: 64}}],
+		name: "Load Register",
+		description: "Loads 4 or 8 bytes from memory at the address in the second register, and writes it to the destination register",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 64}, name: "Source address"}],
 		mc_constructor: [
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
 			["get_bits", 0, 0, 12], # Immediate offset zero			
-			["bits", 1,0, 1,0, 0, 1,1,1, 1,1],
+			["bits", 1,0, 1,0, 0, 1,1,1],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []],
+			["bits", 1],
 		],
 		bitsize: 32
 	},
-	{
-		keyword: "ldr",
-		operands: [{type: "register", restrictions: {reg_size: 32}}, {type: "register", restrictions: {reg_size: 64}}],
-		mc_constructor: [
-			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
-			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
-			["get_bits", 0, 0, 12], # Immediate offset zero			
-			["bits", 1,0, 1,0, 0, 1,1,1, 0,1],
-		],
-		bitsize: 32
-	},
+	
 	{
 		keyword: "ldrb",
 		name: "Load Register Byte",
 		description: "Loads a byte from memory and writes the result to the destination register.",
-		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_size: 64, reg_type: "gpr"}, name: "Source address"}],
+		operands: [{type: "register", restrictions: {reg_type: "gpr", reg_size: 32}, name: "Destination"}, {type: "register", restrictions: {reg_size: 64, reg_type: "gpr"}, name: "Source address"}],
 		mc_constructor: [
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
@@ -321,41 +316,19 @@ end
 		],
 		bitsize: 32
 	},
-	{
-		keyword: "str",
-		description: "Stores the contents of a 32 bit register at the address specified by the second register",
-		operands: [{type: "register", restrictions: {reg_size: 32}, name: "Content"}, {type: "register", restrictions: {reg_size: 64}, name: "Address"}],
-		mc_constructor: [
-			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
-			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
-			["get_bits", 0, 0, 12], # Immediate offset zero			
-			["bits", 0,0, 1,0, 0, 1,1,1, 0,1],
-		],
-		bitsize: 32
-	},
-	{
-		keyword: "str",
-		description: "Stores the contents of a 64 bit register at the address specified by the second register",
-		operands: [{type: "register", restrictions: {reg_size: 64}, name: "Content"}, {type: "register", restrictions: {reg_size: 64}, name: "Address"}],
-		mc_constructor: [
-			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
-			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
-			["get_bits", 0, 0, 12], # Immediate offset zero			
-			["bits", 0,0, 1,0, 0, 1,1,1, 1,1],
-		],
-		bitsize: 32
-	},
 	
 	{
-		keyword: "str_unsigned",
-		name: "STR (immediate), unsigned offset",
-		description: "Stores the contents of a 32 bit register at the address specified by the second register with an unsigned immediate offset.",
-		operands: [{type: "register", restrictions: {reg_size: 32}, name: "Content"}, {type: "register", restrictions: {reg_size: 64}, name: "Address"}, {type: "immediate", name: "Address Offset"}],
+		keyword: "str",
+		name: "Store",
+		description: "Stores the contents of a 64 bit register at the address specified by the second register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Content"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 64}, name: "Address"}],
 		mc_constructor: [
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
-			["get_bits", ["get_operand", 2], 0, 12], # Immediate offset zero			
-			["bits", 0,0, 1,0, 0, 1,1,1, 0,1],
+			["get_bits", 0, 0, 12],	
+			["bits", 0,0, 1,0, 0, 1,1,1],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []],
+			["bits", 1] # size second bit always 1
 		],
 		bitsize: 32
 	},
@@ -364,42 +337,60 @@ end
 		keyword: "str_unsigned",
 		name: "STR (immediate), unsigned offset",
 		description: "Stores the contents of a 64 bit register at the address specified by the second register with an unsigned immediate offset.",
-		operands: [{type: "register", restrictions: {reg_size: 64}, name: "Content"}, {type: "register", restrictions: {reg_size: 64}, name: "Address"}, {type: "immediate", name: "Address Offset"}],
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Content"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 64}, name: "Address"}, {type: "immediate", name: "Address Offset"}],
 		mc_constructor: [
+			["case", ["get_key", ["get_operand", 0], :reg_size],
+				64, ["if_eq_else", ["modulo", ["get_operand", 2], 8], 0, [], ["raise_error", "str_unsigned Error: Unsigned offset must be divisible by 8 for 64-bit registers."]],
+				32, ["if_eq_else", ["modulo", ["get_operand", 2], 4], 0, [], ["raise_error", "str_unsigned Error: Unsigned offset must be divisible by 4 for 32-bit registers."]],
+				[]
+			],
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
-			["get_bits", ["get_operand", 2], 0, 12], # Immediate offset zero			
-			["bits", 0,0, 1,0, 0, 1,1,1, 1,1],
+			["get_bits",
+				["case", ["get_key", ["get_operand", 0], :reg_size],
+					64, ["divide", ["get_operand", 2], 8],
+					32, ["divide", ["get_operand", 2], 4],
+					["get_operand", 2]
+				],
+			0, 12],	
+			["bits", 0,0, 1,0, 0, 1,1,1],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []],
+			["bits", 1] # size second bit always 1
 		],
 		bitsize: 32
 	},
 	
+	
 	{
 		keyword: "str_pre_index",
 		name: "STR (immediate), signed offset, pre-index",
-		description: "Stores the contents of a 64-bit register at the address specified by the second register with a signed immediate offset that is added before storing.",
-		operands: [{type: "register", restrictions: {reg_size: 64}, name: "Content"}, {type: "register", restrictions: {reg_size: 64}, name: "Address"}, {type: "immediate", name: "Address Offset"}],
+		description: "Stores the contents of a general purpose register at the address specified by the second register with an immediate offset added before writing.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Content"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 64}, name: "Address"}, {type: "immediate", name: "Address Offset"}],
 		mc_constructor: [
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
 			["bits", 1, 1],
 			["get_bits", ["get_operand", 2], 0, 9],	
-			["bits", 0, 0,0, 0,0, 0, 1,1,1, 1,1],
+			["bits", 0, 0,0, 0,0, 0, 1,1,1],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []],
+			["bits", 1] # size second bit always 1
 		],
 		bitsize: 32
 	},
 	
 	{
-		keyword: "str_pre_index",
-		name: "STR (immediate), signed offset, pre-index",
-		description: "Stores the contents of a 32-bit register at the address specified by the second register with a signed immediate offset that is added before storing.",
-		operands: [{type: "register", restrictions: {reg_size: 32}, name: "Content"}, {type: "register", restrictions: {reg_size: 64}, name: "Address"}, {type: "immediate", name: "Address Offset"}],
+		keyword: "str_post_index",
+		name: "STR (immediate), signed offset, post-index",
+		description: "Stores the contents of a general purpose register at the address specified by the second register, with an immediate offset added after writing.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Content"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 64}, name: "Address"}, {type: "immediate", name: "Address Offset"}],
 		mc_constructor: [
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
-			["bits", 1, 1],
+			["bits", 1, 0],
 			["get_bits", ["get_operand", 2], 0, 9],	
-			["bits", 0, 0,0, 0,0, 0, 1,1,1, 0,1],
+			["bits", 0, 0,0, 0,0, 0, 1,1,1],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []],
+			["bits", 1] # size second bit always 1
 		],
 		bitsize: 32
 	},
