@@ -28,6 +28,16 @@ MC_AST_NODES = [
 	{name: "get_label_address", n_args: 1, func: lambda {|args, state| state[:labels].include?(args[0]) ? state[:labels][args[0]] : raise("Label \"#{args[0]}\" not found: Program build not possible") } },
 	{name: "bits", n_args: "any", func: lambda {|args, state| args } },
 	{name: "if_eq_else", n_args: 4, eval_args: false, func: lambda {|args, state| (eval_mc_node_arg(args[0], state) == eval_mc_node_arg(args[1], state)) ? eval_mc_node_arg(args[2], state) : eval_mc_node_arg(args[3], state) }},
+	{name: "case", n_args: "any", eval_args: false, func: lambda do |args, state| 
+		value = eval_mc_node_arg(args[0], state)
+		raise "Incorrect use of the \"case\" MC Constructor: incorrect number of arguments. This is likely a problem with the architecture, not the program being compiled." if (args.size - 2) % 2 != 0
+		args[1...-1].each_slice(2) do |check_value, block|
+			if value == check_value
+				return eval_mc_node_arg(block, state)
+			end
+		end
+		eval_mc_node_arg(args.last, state)
+	end},
 	{name: "raise_error", n_args: 1, func: lambda {|args, state| raise args[0] } },
 	{name: "get_key", n_args: 2, func: lambda {|args, state| args[0][args[1]] }},
 ]
