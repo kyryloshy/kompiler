@@ -398,68 +398,61 @@ end
 	
 	{
 		keyword: "cmp",
-		operands: [{type: "register", restrictions: {reg_size: 64}}, {type: "immediate"}],
+		name: "Compare (immediate)",
+		description: "Subtracts an immediate value from a register value, and updates the condition flags based on the result.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}}, {type: "immediate"}],
 		mc_constructor: [
 			["bits", 1,1,1,1,1],
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
-			["get_bits", ["get_operand", 1], 0, 12], # Immediate offset zero			
-			["bits", 0, 0,1,0,0,0,1, 1, 1, 1],
+			["get_bits", ["get_operand", 1], 0, 12], # Immediate value	
+			["bits", 0, 0,1,0,0,0,1, 1, 1],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # sf
 		],
 		bitsize: 32
 	},
 	
 	{
 		keyword: "cmp",
-		name: "CMP (two registers)",
-		description: "Compares two 64-bit registers and updates condition flags based on the result.",
-		operands: [{type: "register", restrictions: {reg_size: 64}, name: "Register 1"}, {type: "register", restrictions: {reg_size: 64}, name: "Register 2"}],
+		name: "Compare (registers)",
+		description: "Subtracts the second register value from the first register value, and updates the condition flags based on the result.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Register 1"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Register 2"}],
 		mc_constructor: [
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "cmp Error: Register sizes are not the same"]],
 			["bits", 1,1,1,1,1], # Rd
-			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5], # Rn
 			["get_bits", 0, 0, 6], # Immediate offset zero (shift amount)
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5], # Rm
 			["bits", 0],
 			["bits", 0, 0], # Shift type
-			["bits", 1,1,0,1,0,1,1,1],
+			["bits", 1,1,0,1,0,1,1],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # sf
 		],
 		bitsize: 32
 	},
-	
-	{
-		keyword: "cmp",
-		name: "CMP (two registers)",
-		description: "Compares two 32-bit registers and updates condition flags based on the result.",
-		operands: [{type: "register", restrictions: {reg_size: 32}, name: "Register 1"}, {type: "register", restrictions: {reg_size: 32}, name: "Register 2"}],
-		mc_constructor: [
-			["bits", 1,1,1,1,1], # Rd
-			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
-			["get_bits", 0, 0, 6], # Immediate offset zero (shift amount)
-			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5], # Rm
-			["bits", 0],
-			["bits", 0, 0], # Shift type
-			["bits", 1,1,0,1,0,1,1,0],
-		],
-		bitsize: 32
-	},
+
 	
 	{
 		keyword: "sub",
-		operands: [{type: "register", restrictions: {reg_size: 64}}, {type: "register", restrictions: {reg_size: 64}}, {type: "immediate"}],
+		name: "Subtract (immediate)",
+		description: "Subtract an immediate value from a register value, and store the result in the destination register",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source"}, {type: "immediate", name: "Immediate"}],
 		mc_constructor: [
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "sub Error: Register sizes are not the same"]],
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
 			["get_bits", ["get_operand", 2], 0, 12], # Immediate offset zero
 			["bits", 0], # Shift	
-			["bits", 0,1,0,0,0,1,0,1,1],
+			["bits", 0,1,0,0,0,1,0,1],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # sf
 		],
 		bitsize: 32
 	},
 	
 	{
 		keyword: "mul",
-		name: "MUL",
-		description: "Multiply the contents of two registers and store the output in the destination register.",
-		operands: [{type: "register", restrictions: {reg_type: "gpr"}}, {type: "register", restrictions: {reg_type: "gpr"}}, {type: "register", restrictions: {reg_type: "gpr"}}],
+		name: "Multiply",
+		description: "Multiply the contents of two registers, and store the output in the destination register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Register 1"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Register 2"}],
 		mc_constructor: [
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5], # Rd
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5], # Rn
