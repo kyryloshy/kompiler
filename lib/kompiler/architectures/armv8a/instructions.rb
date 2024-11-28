@@ -293,6 +293,33 @@ end
 	},
 	
 	{
+		keyword: "ldr_unsigned",
+		name: "Load Register (immediate), unsigned offset",
+		description: "Loads 4 or 8 bytes from memory at the address in the second register with an unsigned immediate offset, and writes it to the destination register",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 64}, name: "Source address"}, {type: "immediate", name: "Offset"}],
+		mc_constructor: [
+			["case", ["get_key", ["get_operand", 0], :reg_size],
+				64, ["if_eq_else", ["modulo", ["get_operand", 2], 8], 0, [], ["raise_error", "ldr_unsigned Error: Unsigned offset must be divisible by 8 for 64-bit registers."]],
+				32, ["if_eq_else", ["modulo", ["get_operand", 2], 4], 0, [], ["raise_error", "ldr_unsigned Error: Unsigned offset must be divisible by 4 for 32-bit registers."]],
+				[]
+			],
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
+			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
+			["get_bits",
+				["case", ["get_key", ["get_operand", 0], :reg_size],
+					64, ["divide", ["get_operand", 2], 8],
+					32, ["divide", ["get_operand", 2], 4],
+					["get_operand", 2]
+				],
+			0, 12],			
+			["bits", 1,0, 1,0, 0, 1,1,1],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []],
+			["bits", 1],
+		],
+		bitsize: 32
+	},
+	
+	{
 		keyword: "ldrb",
 		name: "Load Register Byte",
 		description: "Loads a byte from memory and writes the result to the destination register.",
