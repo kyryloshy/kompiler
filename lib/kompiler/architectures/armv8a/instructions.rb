@@ -454,6 +454,8 @@ end
 		description: "Multiply the contents of two registers, and store the output in the destination register.",
 		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Register 1"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Register 2"}],
 		mc_constructor: [
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "mul Error: Register sizes are not the same"]], 
+			["if_eq_else", ["get_key", ["get_operand", 1], :reg_size], ["get_key", ["get_operand", 2], :reg_size], [], ["raise_error", "mul Error: Register sizes are not the same"]],
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5], # Rd
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5], # Rn
 			["bits", 1,1,1,1,1, 0], # Ra o0
