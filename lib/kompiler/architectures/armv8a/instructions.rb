@@ -538,6 +538,29 @@ end
 	},
 	
 	
+	{
+		keyword: "msub",
+		name: "Multiply-Subtract",
+		description: "Multiplies two register values, subtracts the product from a third register value, and writes the result to the destination register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Register 1 (to multiply)"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Register 2 (to multiply)"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Register 3 (To subtract from)"}],
+		mc_constructor: [
+			# Checks for register sizes being the same
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "madd Error: Register sizes are not the same"]], 
+			["if_eq_else", ["get_key", ["get_operand", 1], :reg_size], ["get_key", ["get_operand", 2], :reg_size], [], ["raise_error", "madd Error: Register sizes are not the same"]], 
+			["if_eq_else", ["get_key", ["get_operand", 2], :reg_size], ["get_key", ["get_operand", 3], :reg_size], [], ["raise_error", "madd Error: Register sizes are not the same"]], 
+	
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5], # Rd
+			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5], # Rn
+			["get_bits", ["encode_gp_register", ["get_operand", 3]], 0, 5], #Ra
+			["bits", 1], # o0
+			["get_bits", ["encode_gp_register", ["get_operand", 2]], 0, 5], # Rm
+			["bits", 0,0,0, 1,1,0,1,1, 0,0],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # sf
+		],
+		bitsize: 32,
+	},
+	
+	
 	#
 	# B.cond instructions
 	#
