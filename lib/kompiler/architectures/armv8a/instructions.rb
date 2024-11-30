@@ -421,8 +421,37 @@ end
 		],
 		bitsize: 32
 	},
+
+
+	{
+		keyword: "strb",
+		name: "Store byte",
+		description: "Stores the least significant byte of a 32-bit general purpose register at the address specified by the second register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr", reg_size: 32}, name: "Content"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 64}, name: "Address"}],
+		mc_constructor: [
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
+			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
+			["get_bits", 0, 0, 12],	
+			["bits", 0,0, 1,0, 0, 1,1,1, 0,0],
+		],
+		bitsize: 32
+	},
+
+	{
+		keyword: "strb_unsigned",
+		name: "Store byte (immediate), unsigned offset",
+		description: "Stores the least significant byte of a 32-bit general purpose register at the address specified by the second register with an unsigned immediate offset.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr", reg_size: 32}, name: "Content"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 64}, name: "Address"}, {type: "immediate", name: "Address Offset"}],
+		mc_constructor: [
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
+			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
+			["get_bits", ["get_operand", 2], 0, 12],	
+			["bits", 0,0, 1,0, 0, 1,1,1, 0,0],
+		],
+		bitsize: 32
+	},
 	
-	
+		
 	{
 		keyword: "cmp",
 		name: "Compare (immediate)",
