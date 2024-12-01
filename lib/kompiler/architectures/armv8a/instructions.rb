@@ -451,6 +451,36 @@ end
 		bitsize: 32
 	},
 	
+	{
+		keyword: "strb_post_index",
+		name: "Store byte (immediate), signed post-index offset",
+		description: "Stores the least significant byte of a 32-bit general purpose register at the address specified by the second register with an immediate offset added after writing.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr", reg_size: 32}, name: "Content"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 64}, name: "Address"}, {type: "immediate", name: "Address Offset"}],
+		mc_constructor: [
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
+			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
+			["bits", 1,0],
+			["get_bits", ["get_operand", 2], 0, 9],	
+			["bits", 0, 0,0, 0,0, 0, 1,1,1, 0,0],
+		],
+		bitsize: 32
+	},
+	
+	{
+		keyword: "strb_pre_index",
+		name: "Store byte (immediate), signed pre-index offset",
+		description: "Stores the least significant byte of a 32-bit general purpose register at the address specified by the second register with an immediate offset added before writing.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr", reg_size: 32}, name: "Content"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 64}, name: "Address"}, {type: "immediate", name: "Address Offset"}],
+		mc_constructor: [
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
+			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
+			["bits", 1,1],
+			["get_bits", ["get_operand", 2], 0, 9],	
+			["bits", 0, 0,0, 0,0, 0, 1,1,1, 0,0],
+		],
+		bitsize: 32
+	},
+	
 		
 	{
 		keyword: "cmp",
