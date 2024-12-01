@@ -567,8 +567,7 @@ end
 			["bits", 1,1,1,1,1, 0], # Ra o0
 			["get_bits", ["encode_gp_register", ["get_operand", 2]], 0, 5], # Rm
 			["bits", 0,0,0, 1,1,0,1,1, 0,0],
-			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], []], # SF = 1 if 64-bit
-			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], 32, ["bits", 0], []], # SF = 0 if 32-bit
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # sf
 		],
 		bitsize: 32
 	},
@@ -617,6 +616,43 @@ end
 			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # sf
 		],
 		bitsize: 32,
+	},
+	
+	
+	{
+		keyword: "udiv",
+		name: "Unsigned Divide",
+		description: "Divides an unsigned integer register value by another unsigned integer register value, and writes the result to the destination register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Register 1"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Register 2"}],
+		mc_constructor: [
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "udiv Error: Register sizes are not the same"]], 
+			["if_eq_else", ["get_key", ["get_operand", 1], :reg_size], ["get_key", ["get_operand", 2], :reg_size], [], ["raise_error", "udiv Error: Register sizes are not the same"]],
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5], # Rd
+			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5], # Rn
+			["bits", 0, 1,0,0,0,0],
+			["get_bits", ["encode_gp_register", ["get_operand", 2]], 0, 5], # Rm
+			["bits", 0,1,1,0,1,0,1,1, 0, 0],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # sf
+		],
+		bitsize: 32
+	},
+	
+	{
+		keyword: "sdiv",
+		name: "Signed Divide",
+		description: "Divides a signed integer register value by another signed integer register value, and writes the result to the destination register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Register 1"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Register 2"}],
+		mc_constructor: [
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "udiv Error: Register sizes are not the same"]], 
+			["if_eq_else", ["get_key", ["get_operand", 1], :reg_size], ["get_key", ["get_operand", 2], :reg_size], [], ["raise_error", "udiv Error: Register sizes are not the same"]],
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5], # Rd
+			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5], # Rn
+			["bits", 1, 1,0,0,0,0],
+			["get_bits", ["encode_gp_register", ["get_operand", 2]], 0, 5], # Rm
+			["bits", 0,1,1,0,1,0,1,1, 0, 0],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # sf
+		],
+		bitsize: 32
 	},
 	
 	
