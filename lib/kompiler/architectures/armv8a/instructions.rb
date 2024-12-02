@@ -103,18 +103,21 @@ end
 	},
 	
 	{
-		keyword: "and", # And between registers, with shift set to zero
-		name: "And",
-		description: "Computes a logical bit-wise AND operation between two registers and writes the result to the destination register.",
-		operands: [{type: "register", restrictions: {reg_size: 64}, name: "Destination"}, {type: "register", restrictions: {reg_size: 64}, name: "Register 1"}, {type: "register", restrictions: {reg_size: 64}, name: "Register 2"}],
+		keyword: "and",
+		name: "And (register)",
+		description: "Performs a bitwise AND of two register values and writes the result to the destination register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Register 1"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Register 2"}],
 		mc_constructor: [
-			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
-			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "and Error: Register sizes are not the same"]],
+			["if_eq_else", ["get_key", ["get_operand", 1], :reg_size], ["get_key", ["get_operand", 2], :reg_size], [], ["raise_error", "and Error: Register sizes are not the same"]],
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5], # Rd
+			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5], # Rn
 			["get_bits", 0, 0, 6], # imm6 (shift amount) set to zero
 			["get_bits", ["encode_gp_register", ["get_operand", 2]], 0, 5],
 			["bits", 0], # N
 			["bits", 0,0], # shift type
-			["bits", 0,1,0,1,0, 0,0, 1],
+			["bits", 0,1,0,1,0, 0,0],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # sf
 		],
 		bitsize: 32
 	},
