@@ -40,6 +40,7 @@ MC_AST_NODES = [
 	end},
 	{name: "raise_error", n_args: 1, func: lambda {|args, state| raise args[0] } },
 	{name: "get_key", n_args: 2, func: lambda {|args, state| args[0][args[1]] }},
+	{name: "concat", n_args: "any", func: lambda {|args, state| args.flatten}},
 ]
 
 def self.is_ast_node(val)
