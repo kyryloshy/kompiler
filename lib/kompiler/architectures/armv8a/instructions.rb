@@ -188,79 +188,98 @@ end
 		bitsize: 32
 	},
 	{
-		# LSL (Logical shift left) with an immediate
-		# immr (rotation) is just set to zeros
 		keyword: "lsl",
-		name: "LSL (immediate)",
-		description: "Logically shifts left the value in the source register by the amount specified by the immediate, and stores the output in the destination register",
-		operands: [{type: "register", restrictions: {reg_size: 64}, name: "Destination"}, {type: "register", restrictions: {reg_size: 64}, name: "Source"}, {type: "immediate", name: "Amount"}],
+		name: "Logical shift left (immediate)",
+		description: "Logically shifts left the value in the source register by the amount specified by the immediate, and writes the result to the destination register",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source"}, {type: "immediate", name: "Shift amount"}],
 		mc_constructor: [
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "lsl Error: Register sizes are not the same"]],
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
 			
-			["get_bits", ["subtract", 63, ["get_operand", 2]], 0, 6],
-			["get_bits", ["modulo", ["multiply", ["get_operand", 2], -1], 64], 0, 6],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 
+				64, [["get_bits", ["subtract", 63, ["get_operand", 2]], 0, 6],
+					["get_bits", ["modulo", ["multiply", ["get_operand", 2], -1], 64], 0, 6],],
+				32, ["get_bits", ["subtract", 31, ["get_operand", 2]], 0, 6],
+					["get_bits", ["modulo", ["multiply", ["get_operand", 2], -1], 32], 0, 6],
+				[]
+			],
 			
-			["bits", 1, 0,1,1,0,0,1, 0,1, 1],
-		],
-		bitsize: 32
-	},
-	{
-		# LSL (Logical shift left) with an immediate for 32-bit registers
-		# immr (rotation) is just set to zeros
-		keyword: "lsl",
-		name: "LSL (immediate)",
-		description: "Logically shifts left the value in the source register by the amount specified by the immediate, and stores the output in the destination register",
-		operands: [{type: "register", restrictions: {reg_size: 32}, name: "Destination"}, {type: "register", restrictions: {reg_size: 32}, name: "Source"}, {type: "immediate", name: "Amount"}],
-		mc_constructor: [
-			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
-			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
-			["get_bits", ["subtract", 31, ["get_operand", 2]], 0, 6],
-			["get_bits", ["modulo", ["multiply", ["get_operand", 2], -1], 32], 0, 6],			
-			["bits", 0, 0,1,1,0,0,1, 0,1, 0],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # N
+			["bits", 0,1,1,0,0,1, 0,1],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # sf
 		],
 		bitsize: 32
 	},
 	
-	
-	
 	{
-		# LSL (Logical shift left) with an immediate
-		# immr (rotation) is just set to zeros
-		keyword: "lsr",
-		name: "LSR (immediate)",
-		description: "Logically shifts right the value in the source register by the amount specified by the immediate, and stores the output in the destination register",
-		operands: [{type: "register", restrictions: {reg_size: 64}, name: "Destination"}, {type: "register", restrictions: {reg_size: 64}, name: "Source"}, {type: "immediate", name: "Amount"}],
+		keyword: "lsl",
+		name: "Logical shift left (register)",
+		description: "Logically shifts left the value in the source register by the amount specified by a variable number of bits, shifting in zeros, and writes the result to the destination register. The shift amount is equal to a modulo operation between the second register value and register size (either 64 or 32).",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Shift amount"}],
 		mc_constructor: [
-			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
-			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "lsl Error: Register sizes are not the same"]],
+			["if_eq_else", ["get_key", ["get_operand", 1], :reg_size], ["get_key", ["get_operand", 2], :reg_size], [], ["raise_error", "lsl Error: Register sizes are not the same"]],
 
-			["bits", 1,1,1,1,1], # imms
-			["bits", 1], # imms end (specifies size)
-			["get_bits", ["get_operand", 2], 0, 6], # immr
-			
-			["bits", 1, 0,1,1,0,0,1, 0,1, 1],
-		],
-		bitsize: 32
-	},
-	{
-		keyword: "lsr",
-		name: "LSR (immediate)",
-		description: "Logically shifts right the value in the source register by the amount specified by the immediate, and stores the output in the destination register",
-		operands: [{type: "register", restrictions: {reg_size: 32}, name: "Destination"}, {type: "register", restrictions: {reg_size: 32}, name: "Source"}, {type: "immediate", name: "Amount"}],
-		mc_constructor: [
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
-		
-			["bits", 1,1,1,1,1], # imms
-			["bits", 0], # imms end (specifies size)
-			["get_bits", ["get_operand", 2], 0, 6], # immr
 			
-			["bits", 0, 0,1,1,0,0,1, 0,1, 0],
+			["bits", 0,0, 0,1,0,0],
+			
+			["get_bits", ["encode_gp_register", ["get_operand", 2]], 0, 5],
+
+			["bits", 0,1,1,0,1,0,1,1, 0, 0],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # sf
 		],
 		bitsize: 32
 	},
 	
+	{
+		keyword: "lsr",
+		name: "Logical shift right (immediate)",
+		description: "Logically shifts right the value in the source register by the amount specified by the immediate, and writes the result to the destination register",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source"}, {type: "immediate", name: "Shift amount"}],
+		mc_constructor: [
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "lsr Error: Register sizes are not the same"]],
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
+			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
+			
+			["bits", 1,1,1,1,1], # imms
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # imms end
+			
+			["get_bits", ["get_operand", 2], 0, 6], # immr
+			
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # N
+			
+			["bits", 0,1,1,0,0,1, 0,1],
+			
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # sf
+		],
+		bitsize: 32
+	},
+	
+	
+	{
+		keyword: "lsr",
+		name: "Logical shift right (register)",
+		description: "Logically shifts right the value in the source register by the amount specified by a variable number of bits, shifting in zeros, and writes the result to the destination register. The shift amount is equal to a modulo operation between the second register value and register size (either 64 or 32).",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Shift amount"}],
+		mc_constructor: [
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "lsl Error: Register sizes are not the same"]],
+			["if_eq_else", ["get_key", ["get_operand", 1], :reg_size], ["get_key", ["get_operand", 2], :reg_size], [], ["raise_error", "lsl Error: Register sizes are not the same"]],
+	
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
+			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
+			
+			["bits", 1,0, 0,1,0,0],
+			
+			["get_bits", ["encode_gp_register", ["get_operand", 2]], 0, 5],
+	
+			["bits", 0,1,1,0,1,0,1,1, 0, 0],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # sf
+		],
+		bitsize: 32
+	},
 	
 	
 	
