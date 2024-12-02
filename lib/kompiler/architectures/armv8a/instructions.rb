@@ -198,10 +198,10 @@ end
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
 			
 			["case", ["get_key", ["get_operand", 0], :reg_size], 
-				64, [["get_bits", ["subtract", 63, ["get_operand", 2]], 0, 6],
+				64, ["concat", ["get_bits", ["subtract", 63, ["get_operand", 2]], 0, 6],
 					["get_bits", ["modulo", ["multiply", ["get_operand", 2], -1], 64], 0, 6],],
-				32, ["get_bits", ["subtract", 31, ["get_operand", 2]], 0, 6],
-					["get_bits", ["modulo", ["multiply", ["get_operand", 2], -1], 32], 0, 6],
+				32, ["concat", ["get_bits", ["subtract", 31, ["get_operand", 2]], 0, 6],
+					["get_bits", ["modulo", ["multiply", ["get_operand", 2], -1], 32], 0, 6]],
 				[]
 			],
 			
