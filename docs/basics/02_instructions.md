@@ -22,6 +22,6 @@ To find all the different instructions and their specifications, Kompiler has a 
  - bitsize: Indicates the instruction's final size in bits
  - mc_constructor: An AST indicating how to build the instruction using the operands provided
  - name: The name of the instruction (Optional)
- - Description: The description for the instruction (Optional)
+ - description: The description for the instruction (Optional)
  
 [Previous](/docs/basics/01_syntax.md) [Next](/docs/basics/03_labels.md)

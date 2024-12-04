@@ -31,10 +31,11 @@ Register operands are a pre-defined set of names, specific to the architecture u
 ### 3.2 Immediate value operands
  
 Immediate operands are constant values used directly in an instruction (e.g., Add **23** to the register X0). While they can be any value the programmer chooses, the size of immediate values is often limited by the instruction encoding, which imposes a constraint on how large the value can be.<br>
-Currently, immediate value operands can be denoted in three ways:
+Currently, immediate value operands can be denoted in four ways:
  - Decimal: 73716253
  - Binary: 0b00110011100
  - Hex: 0xf8a353bc
+ - Character (ASCII encoding): 'a'
  
 ### 3.3 String operands
 
