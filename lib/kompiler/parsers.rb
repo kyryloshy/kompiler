@@ -9,6 +9,8 @@ def self.parse_str(code)
 
 	# Skip the "
 	i = 1
+	
+	quote = code[0]
 
 	next_char_backslashed = false
 
@@ -20,17 +22,14 @@ def self.parse_str(code)
 				str_content << "\n"
 			elsif code[i] == "r"
 				str_content << "\r"
-			elsif code[i] == "\\"
-				str_content << "\\"
 			elsif code[i] == "0"
 				str_content << "\0"
 			else
-				str_content << "\\"
 				str_content << code[i]
 			end
 			next_char_backslashed = false
 		else
-			if code[i] == "\""
+			if code[i] == quote
 				break
 			elsif code[i] == "\\"
 				next_char_backslashed = true
@@ -207,7 +206,6 @@ end
 
 def self.parse_operand_str(operand_str)
 	
-	
 	# Check if the operand is a register
 	is_register, register = check_register_operand(operand_str)
 	return {type: "register", value: register, register: register} if is_register
@@ -288,9 +286,9 @@ def self.parse_instruction_line(line)
 			end
 			
 			# If a string definition, parse to the end of the string
-			if line[i] == "\""
+			if ["\"", "'"].include?(line[i])
 				str_content, parsed_size = parse_str(line[i..])
-				operand_content += '"' + str_content + '"'
+				operand_content += line[i] + str_content + line[i]
 				i += parsed_size
 				next
 			end
