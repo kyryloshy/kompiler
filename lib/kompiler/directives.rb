@@ -3,13 +3,13 @@
 
 module Kompiler
 
-class Directives
+module Directives
 
 def self.directives
-	@@DIRECTIVES
+	@directives
 end
 
-@@DIRECTIVES = [
+@directives = [
 	{
 		keyword: "zeros",
 		func: lambda do |operands, state|
