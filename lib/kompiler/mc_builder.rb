@@ -39,8 +39,10 @@ MC_AST_NODES = [
 		eval_mc_node_arg(args.last, state)
 	end},
 	{name: "raise_error", n_args: 1, func: lambda {|args, state| raise args[0] } },
-	{name: "get_key", n_args: 2, func: lambda {|args, state| args[0][args[1]] }},
+	{name: "get_key", n_args: 2, func: lambda {|args, state| args[0].keys.include?(args[1]) ? args[0][args[1]] : raise("MC Constructor get_key Error: The key \"#{args[1]}\" doesn't exist - Program build not possible. This is likely a problem with the ISA configuration, not the program being compiled.") }},
 	{name: "concat", n_args: "any", func: lambda {|args, state| args.flatten}},
+	{name: "set_var", n_args: 2, func: lambda {|args, state| state[:instruction_variables][args[0]] = args[1]; [] }},
+	{name: "get_var", n_args: 1, func: lambda {|args, state| state[:instruction_variables].keys.include?(args[0]) ? state[:instruction_variables][args[0]] : raise("Instruction variable \"#{args[0]}\" not found: Program build not possible. This is likely a program with the ISA configuration, not the program being compiled.") }},
 ]
 
 def self.is_ast_node(val)
