@@ -3,13 +3,13 @@
 
 module Kompiler
 
-class ARMv8A
+module ARMv8A
 
 def self.registers
-	@@registers
+	@registers
 end	
 
-@@registers = [
+@registers = [
 	{:reg_name=>"w0", :reg_value=>0, :reg_size=>32, :reg_type=>"gpr"},
 	{:reg_name=>"w1", :reg_value=>1, :reg_size=>32, :reg_type=>"gpr"},
 	{:reg_name=>"w2", :reg_value=>2, :reg_size=>32, :reg_type=>"gpr"},

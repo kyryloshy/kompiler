@@ -3,13 +3,13 @@
 
 module Kompiler
 
-class ARMv8A
+module ARMv8A
 	
 def self.instructions
-	@@instructions
+	@instructions
 end
 	
-@@instructions = [
+@instructions = [
 	{	keyword: "mov",
 		operands: [{type: "register", restrictions: {reg_size: 64}}, {type: "immediate", restrictions: {}}],
 		mc_constructor: [

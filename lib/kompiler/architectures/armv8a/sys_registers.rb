@@ -3,14 +3,30 @@
 
 module Kompiler
 
-class ARMv8A
+module ARMv8A
 
 def self.sys_registers
-	@@sys_registers
+	@sys_registers
 end	
 
-@@sys_registers = [
+@sys_registers = [
 	{reg_name: "mpidr_el0", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>3, "op1"=>0, "CRn"=>0, "CRm"=>0, "op2"=>5}, rw_type: "ro"},
+	
+	
+	# Special registers for the MSR (immediate) instruction (some of them were previously defined already)
+	{reg_name: "SPSel", reg_type: "pstate_reg"},
+	{reg_name: "DAIFSet", reg_type: "pstate_reg"},
+	{reg_name: "DAIFClr", reg_type: "pstate_reg"},
+	{reg_name: "UAO", reg_type: "pstate_reg"},
+	{reg_name: "PAN", reg_type: "pstate_reg"},
+	{reg_name: "ALLINT", reg_type: "pstate_reg"},
+	{reg_name: "PM", reg_type: "pstate_reg"},
+	{reg_name: "SSBS", reg_type: "pstate_reg"},
+	{reg_name: "DIT", reg_type: "pstate_reg"},
+	{reg_name: "SVCRSM", reg_type: "pstate_reg"},
+	{reg_name: "SVCRZA", reg_type: "pstate_reg"},
+	{reg_name: "SVCRSMZA", reg_type: "pstate_reg"},
+	{reg_name: "TCO", reg_type: "pstate_reg"},
 ]
 
 end # Kompiler::ARMv8A
