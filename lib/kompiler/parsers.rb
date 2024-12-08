@@ -86,7 +86,10 @@ end
 
 def self.check_register_operand(str)
 	Kompiler::Architecture.registers.each do |register|
-		return [true, register] if str == register[:reg_name]
+		# Downcase both the string and the register if the register name is not case sensitive (the default)
+		processed_str = register[:case_sensitive] ? str : str.downcase
+		processed_reg_name = register[:case_sensitive] ? register[:reg_name] : register[:reg_name].downcase
+		return [true, register] if processed_str == processed_reg_name
 	end
 	return [false, nil]
 end
