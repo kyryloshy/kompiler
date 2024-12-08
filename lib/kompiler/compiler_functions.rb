@@ -168,7 +168,7 @@ def self.construct_program_mc(parsed_lines, labels)
 	lines_bytes = ""
 	
 	
-	program_state = {labels: labels, current_address: 0}
+	program_state = {labels: labels, current_address: 0, instruction_variables: {}}
 	
 	parsed_lines.each do |line|
 		case line[:type]
@@ -179,6 +179,7 @@ def self.construct_program_mc(parsed_lines, labels)
 			mc_constructor = line[:instruction][:mc_constructor]
 			
 			instr_bits = Kompiler::MachineCode_AST.build_mc(mc_constructor, program_state)			
+			program_state[:instruction_variables] = Hash.new # Clear the instruction variables after running the instruction
 
 			instr_bytes = bits_to_bytes(instr_bits)
 			
