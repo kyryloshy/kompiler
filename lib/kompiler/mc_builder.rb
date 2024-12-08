@@ -39,7 +39,10 @@ module MachineCode_AST
 		end
 		eval_mc_node_arg(args.last, state)
 	end},
-	{name: "raise_error", n_args: 1, func: lambda {|args, state| raise args[0] } },
+	
+	{name: "raise_error", n_args: 1, func: lambda {|args, state| raise args[0]; [] } },
+	{name: "raise_warning", n_args: 1, func: lambda {|args, state| puts args[0]; [] } },
+	
 	{name: "get_key", n_args: 2, func: lambda {|args, state| args[0].keys.include?(args[1]) ? args[0][args[1]] : raise("MC Constructor get_key Error: The key \"#{args[1]}\" doesn't exist - Program build not possible. This is likely a problem with the ISA configuration, not the program being compiled.") }},
 	{name: "concat", n_args: "any", func: lambda {|args, state| args.flatten}},
 	{name: "set_var", n_args: 2, func: lambda {|args, state| state[:instruction_variables][args[0]] = args[1]; [] }},
