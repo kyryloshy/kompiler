@@ -54,20 +54,20 @@ end
 		mc_constructor: [
 			# Case for PSTATE special register encodings
 			["case", ["downcase_str", ["get_key", ["get_operand_hash", 0], :definition]],
-				"spsel", 	["concat", ["set_var", "op1", 0b000], ["set_var", "op2", 0b101], ["if_eq_else"]],
+				"spsel", 	["concat", ["set_var", "op1", 0b000], ["set_var", "op2", 0b101]],
 				"daifset", 	["concat", ["set_var", "op1", 0b011], ["set_var", "op2", 0b110]],
 				"daifclr",	["concat", ["set_var", "op1", 0b011], ["set_var", "op2", 0b111]],
 				"uao", 		["concat", ["set_var", "op1", 0b000], ["set_var", "op2", 0b011]],
 				"pan", 		["concat", ["set_var", "op1", 0b000], ["set_var", "op2", 0b100]],
-				"allint", 	["concat", ["set_var", "op1", 0b001], ["set_var", "op2", 0b000]],
-				"pm", 		["concat", ["set_var", "op1", 0b001], ["set_var", "op2", 0b000]],
+				"allint", 	["concat", ["set_var", "op1", 0b001], ["set_var", "op2", 0b000], ["if_eq_else", ["bit_and", ["get_operand", 1], 0b001], ["get_operand", 1], [], ["raise_warning", "msr ALLINT Warning: The immediate value is not valid for the instruction - Continuing build."]] ],
+				"pm", 		["concat", ["set_var", "op1", 0b001], ["set_var", "op2", 0b000], ["if_eq_else", ["bit_and", ["get_operand", 1], 0b011], ["get_operand", 1], [], ["raise_warning", "msr PM Warning: The immediate value is not valid for the instruction - Continuing build."]]],
 				"ssbs", 	["concat", ["set_var", "op1", 0b011], ["set_var", "op2", 0b001]],
 				"dit", 		["concat", ["set_var", "op1", 0b011], ["set_var", "op2", 0b010]],
-				"svcrsm",	["concat", ["set_var", "op1", 0b011], ["set_var", "op2", 0b011]],
-				"svcrza", 	["concat", ["set_var", "op1", 0b011], ["set_var", "op2", 0b011]],
-				"svcrsmza", ["concat", ["set_var", "op1", 0b011], ["set_var", "op2", 0b011]],
+				"svcrsm",	["concat", ["set_var", "op1", 0b011], ["set_var", "op2", 0b011], ["if_eq_else", ["bit_and", ["get_operand", 1], 0b0011], ["get_operand", 1], [], ["raise_warning", "msr SVCRSM Warning: The immediate value is not valid for the instruction - Continuing build."]]],
+				"svcrza", 	["concat", ["set_var", "op1", 0b011], ["set_var", "op2", 0b011], ["if_eq_else", ["bit_and", ["get_operand", 1], 0b0101], ["get_operand", 1], [], ["raise_warning", "msr SVCRZA Warning: The immediate value is not valid for the instruction - Continuing build."]]],
+				"svcrsmza", ["concat", ["set_var", "op1", 0b011], ["set_var", "op2", 0b011], ["if_eq_else", ["bit_and", ["get_operand", 1], 0b0111], ["get_operand", 1], [], ["raise_warning", "msr SVCRSMZA Warning: The immediate value is not valid for the instruction - Continuing build."]]],
 				"tco", 		["concat", ["set_var", "op1", 0b011], ["set_var", "op2", 0b100]],
-				["raise", "msr Error: The specified PSTATE special register was not found - Program build not possible."]
+				["raise_error", "msr Error: The specified PSTATE special register was not found - Program build not possible."]
 			],
 			["bits", 1,1,1,1,1],
 			["get_bits", ["get_var", "op2"], 0, 3],
