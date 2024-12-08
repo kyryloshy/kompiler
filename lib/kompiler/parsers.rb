@@ -172,16 +172,16 @@ end
 def self.check_immediate_operand(operand_str)
 	
 	is_bin, bin_value = check_binary_operand(operand_str)
-	return [true, {type: "immediate", value: bin_value, def_type: "binary"}] if is_bin
+	return [true, {type: "immediate", value: bin_value, def_type: "binary", definition: operand_str}] if is_bin
 	
 	is_decimal, decimal_value = check_decimal_operand(operand_str)
-	return [true, {type: "immediate", value: decimal_value, def_type: "decimal"}] if is_decimal
+	return [true, {type: "immediate", value: decimal_value, def_type: "decimal", definition: operand_str}] if is_decimal
 	
 	is_hex, hex_value = check_hex_operand(operand_str)
-	return [true, {type: "immediate", value: hex_value, def_type: "hex"}] if is_hex
+	return [true, {type: "immediate", value: hex_value, def_type: "hex", definition: operand_str}] if is_hex
 	
 	is_char, char_value = check_char_operand(operand_str)
-	return [true, {type: "immediate", value: char_value, def_type: "char"}] if is_char
+	return [true, {type: "immediate", value: char_value, def_type: "char", definition: operand_str}] if is_char
 	
 	return [false, nil]
 end
@@ -208,11 +208,11 @@ def self.parse_operand_str(operand_str)
 	
 	# Check if the operand is a register
 	is_register, register = check_register_operand(operand_str)
-	return {type: "register", value: register, register: register} if is_register
+	return {type: "register", value: register, register: register, definition: operand_str} if is_register
 	
 	# Check if the operand is a string
 	is_string = operand_str[0] == "\""
-	return {type: "string", value: operand_str[1...-1], string: operand_str[1...-1]} if is_string
+	return {type: "string", value: operand_str[1...-1], string: operand_str[1...-1], definition: operand_str} if is_string
 	
 	# Checks if it's an immediate
 	is_immediate, immediate_val = check_immediate_operand(operand_str)
@@ -225,7 +225,7 @@ def self.parse_operand_str(operand_str)
 	
 	# The operand is a label if it doesn't start with a number and doesn't include spaces
 	is_label = check_label_operand(operand_str)
-	return {type: "label", value: operand_str} if is_label
+	return {type: "label", value: operand_str, definition: operand_str} if is_label
 	
 	
 	# If no checks succeeded, return false
@@ -319,95 +319,41 @@ end
 
 
 
-
-
-# def self.parse_instruction_line(line)
-# 	keyword = ""
-# 	i = 0
-# 	
-# 	# Loop until a non-whitespace character
-# 	while i < line.size
-# 		break if ![" ", "\t"].include?(line[i])
-# 		i += 1
-# 	end
 # 
-# 	# Loop to get the keyword
-# 	loop do
-# 		# Exit out of the loop if the character is a whitespace
-# 		break if [" ", "\t"].include?(line[i]) || i >= line.size
-# 		# Add the character if not a whitespace
-# 		keyword << line[i]
-# 		# Proceed to the next character
-# 		i += 1	
-# 	end
+# def self.check_operand_match(operand_description, operand)
 # 
-# 	operand_strings = []
-# 	
-# 	# Loop for operands
-# 	loop do
-# 		break if i >= line.size
+	# # If operand type doesn't not match, return false
+	# return false if operand[:type] != operand_description[:type]
 # 
-# 		# Whitespace - skip
-# 		if [" ", "\t"].include? line[i]
-# 			i += 1
-# 			next
-# 		end
+	# # If no operand restrictions, return true
+	# return true if !operand_description.keys.include?(:restrictions)
 # 
-# 		# If a string operand - parse the string
-# 		if line[i] == "\""
-# 
-# 			str_content, parsed_size = parse_str(line[i..])
-# 			operand_strings << line[i...(i + parsed_size)]
-# 			i += parsed_size
-# 
-# 		# If anything else - parse until whitespace, comma or end of line
-# 		else
-# 			content = ""
-# 
-# 			while i < line.size
-# 				break if [" ", ","].include? line[i]
-# 				content << line[i]
-# 				i += 1
-# 			end
-# 			
-# 			operand_strings << content
-# 		end
-# 
-# 
-# 		# After operand parsed
-# 		# Loop to meet a comma or end of line
-# 		# Give error if stuff except whitespace
-# 
-# 		while i < line.size
-# 			# If comma, move to next character and repeat the bigger operand loop
-# 			if line[i] == ","
-# 				i += 1
-# 				break
-# 			end
-# 			# If non-whitespace, raise an error
-# 			# raise "Error: Unparsed content - exiting" if ![" ", "\t"].include?(line[i])
-# 			return false if ![" ", "\t"].include?(line[i])
-# 			i += 1
-# 		end
-# 	end
-# 	
-# 	# If end of line not reached, return an error
-# 	if i != line.size
-# 		return false
-# 	end
-# 
-# 	
-# 	# Parse operand strings into operand types and values
-# 	
-# 	operands = []
-# 	
-# 	operand_strings.each do |operand_str|
-# 		operand = parse_operand_str(operand_str)
-# 		return false if operand == false
-# 		operands << operand
-# 	end
-# 	
-# 	return [keyword, operands]
+	# case operand_description[:type]
+	# when "register"
+	# 
+		# # Check register type match
+		# if operand_description[:restrictions].keys.include?(:reg_type)
+			# return false if operand[:register][:reg_type] != operand_description[:restrictions][:reg_type]
+		# end
+	# 
+		# # Check register size match
+		# if operand_description[:restrictions].keys.include?(:reg_size)
+			# return false if operand[:register][:reg_size] != operand_description[:restrictions][:reg_size]
+		# end
+		# 
+	# when "immediate"
+		# 
+		# 
+		# 
+	# when "label"
+		# 
+		# 
+		# 
+	# end
+	# 
+	# 
+	# # If the restrictions match (by not returning a negative answer), return true
+	# return true
 # end
 
 
@@ -418,35 +364,43 @@ def self.check_operand_match(operand_description, operand)
 	return false if operand[:type] != operand_description[:type]
 
 	# If no operand restrictions, return true
-	return true if !operand_description.keys.include?(:restrictions)
+	# return true if !operand_description.keys.include?(:restrictions)
 
-	case operand_description[:type]
+	# Get the restrictions
+	operand_restrictions = operand_description[:restrictions]
+	return true if !operand_restrictions # If no restrictions, return true
+
+	# Get the operand's values / encoding
+	case operand[:type]
 	when "register"
-	
-		# Check register type match
-		if operand_description[:restrictions].keys.include?(:reg_type)
-			return false if operand[:register][:reg_type] != operand_description[:restrictions][:reg_type]
-		end
-	
-		# Check register size match
-		if operand_description[:restrictions].keys.include?(:reg_size)
-			return false if operand[:register][:reg_size] != operand_description[:restrictions][:reg_size]
-		end
-		
+		operand_encoding = operand[:value]
 	when "immediate"
-		
-		
-		
-	when "label"
-		
-		
-		
+		operand_encoding = operand[:value]
+	when "string"
+		operand_encoding = Hash.new
+	end
+
+	# Loop through each restriction to see if the operand matches it
+	operand_restrictions.each do |r_key, r_spec|
+		# Get the restricted value of the operand
+		op_value = operand_encoding[r_key]
+
+		# Check if it matches the restriction specification
+		# If an array, the OR algorithm works (the operand key value must be one of the specified values in the r_spec list)
+		if r_spec.is_a? Array
+			return false if !r_spec.include?(op_value)
+		else # If not an array, just check of equality
+			return false if op_value != r_spec
+		end
 	end
 	
 	
 	# If the restrictions match (by not returning a negative answer), return true
 	return true
 end
+
+ 
+
 
 
 # Returns array of [status, operands]
