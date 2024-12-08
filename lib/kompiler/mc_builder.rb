@@ -3,10 +3,11 @@
 
 module Kompiler
 
-class MachineCode_AST
+module MachineCode_AST
 
-MC_AST_NODES = [
+@MC_AST_NODES = [
 	{name: "get_operand", n_args: 1, func: lambda {|args, state| state[:operands][args[0]][:value]} },
+	{name: "get_operand_hash", n_args: 1, func: lambda {|args, state| state[:operands][args[0]] } },
 	{name: "get_bits", n_args: 3, func: lambda {|args, state| (args[1]...(args[1] + args[2])).map{|bit_i| args[0][bit_i]} } },
 	{name: "get_bits_signed", n_args: 3, func: lambda do |args, state|
 		if args[1] == 0
@@ -43,6 +44,13 @@ MC_AST_NODES = [
 	{name: "concat", n_args: "any", func: lambda {|args, state| args.flatten}},
 	{name: "set_var", n_args: 2, func: lambda {|args, state| state[:instruction_variables][args[0]] = args[1]; [] }},
 	{name: "get_var", n_args: 1, func: lambda {|args, state| state[:instruction_variables].keys.include?(args[0]) ? state[:instruction_variables][args[0]] : raise("Instruction variable \"#{args[0]}\" not found: Program build not possible. This is likely a program with the ISA configuration, not the program being compiled.") }},
+	
+	# String manipulations
+	{name: "downcase_str", n_args: 1, func: lambda {|args, state| args[0].downcase }},
+	
+	# Bit manipulations
+	{name: "bit_and", n_args: 2, func: lambda {|args, state| args[0] & args[1] }},
+	{name: "bit_or", n_args: 2, func: lambda {|args, state| args[0] | args[1] }},
 ]
 
 def self.is_ast_node(val)
@@ -59,7 +67,8 @@ def self.run_mc_ast(node, state)
 	node_name = node[0]
 	node_args = node[1..]
 	
-	node_logic = MC_AST_NODES.filter{|any_node| any_node[:name] == node_name}[0]
+	
+	node_logic = @MC_AST_NODES.filter{|any_node| any_node[:name] == node_name}[0]
 	
 	if !node_logic
 		raise "MC Node \"#{node_name}\" wasn't found. Cannot build the program"
