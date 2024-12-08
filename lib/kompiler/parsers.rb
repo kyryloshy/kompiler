@@ -322,52 +322,10 @@ end
 
 
 
-# 
-# def self.check_operand_match(operand_description, operand)
-# 
-	# # If operand type doesn't not match, return false
-	# return false if operand[:type] != operand_description[:type]
-# 
-	# # If no operand restrictions, return true
-	# return true if !operand_description.keys.include?(:restrictions)
-# 
-	# case operand_description[:type]
-	# when "register"
-	# 
-		# # Check register type match
-		# if operand_description[:restrictions].keys.include?(:reg_type)
-			# return false if operand[:register][:reg_type] != operand_description[:restrictions][:reg_type]
-		# end
-	# 
-		# # Check register size match
-		# if operand_description[:restrictions].keys.include?(:reg_size)
-			# return false if operand[:register][:reg_size] != operand_description[:restrictions][:reg_size]
-		# end
-		# 
-	# when "immediate"
-		# 
-		# 
-		# 
-	# when "label"
-		# 
-		# 
-		# 
-	# end
-	# 
-	# 
-	# # If the restrictions match (by not returning a negative answer), return true
-	# return true
-# end
-
-
-
 def self.check_operand_match(operand_description, operand)
 
 	# If operand type doesn't not match, return false
 	return false if operand[:type] != operand_description[:type]
-
-	# If no operand restrictions, return true
-	# return true if !operand_description.keys.include?(:restrictions)
 
 	# Get the restrictions
 	operand_restrictions = operand_description[:restrictions]
