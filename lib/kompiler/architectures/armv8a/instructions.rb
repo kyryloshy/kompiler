@@ -354,6 +354,91 @@ end
 		],
 		bitsize: 32
 	},
+	
+	{
+		keyword: "ldp",
+		name: "Load Pair",
+		description: "Loads data for two registers from memory at the address specified by the third register, and writes the data to two general-purpose registers.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination Register 1"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Destination Register 2"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 64}, name: "Address Register"}],
+		bitsize: 32,
+		mc_constructor: [
+			# Check for register sizes
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "ldp Error: Register sizes are not the same"]],
+			["get_bits", ["get_key", ["get_operand", 0], :reg_value], 0, 5],
+			["get_bits", ["get_key", ["get_operand", 2], :reg_value], 0, 5],
+			["get_bits", ["get_key", ["get_operand", 1], :reg_value], 0, 5],
+			["get_bits", 0, 0, 7], # imm7
+			["bits", 1, 0,1,0, 0, 1,0,1, 0],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []] # opc
+		]
+	},
+	{
+		keyword: "ldp_signed",
+		name: "Load Pair (signed offset)",
+		description: "Loads data for two registers from memory at the address specified by the third register, with a signed immediate offset added, and writes the data to two general-purpose registers.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Content Register 1"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Content Register 2"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 64}, name: "Address Register"}, {type: "immediate", name: "Address Offset"}],
+		bitsize: 32,
+		mc_constructor: [
+			# Check for register sizes
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "ldp_signed Error: Register sizes are not the same"]],
+			# Establish the immediate offset alignment using the register size
+			["set_var", "imm_alignment", ["case", ["get_key", ["get_operand", 0], :reg_size], 32, 4, 64, 8, 0]],
+			# Check if the immediate offset is properly aligned
+			["if_eq_else", ["modulo", ["get_operand", 3], ["get_var", "imm_alignment"]], 0, [], ["raise_error", "ldp_signed Error: The immediate offset is not properly aligned"]],
+	
+			["get_bits", ["get_key", ["get_operand", 0], :reg_value], 0, 5],
+			["get_bits", ["get_key", ["get_operand", 2], :reg_value], 0, 5],
+			["get_bits", ["get_key", ["get_operand", 1], :reg_value], 0, 5],
+			["get_bits", ["divide", ["get_operand", 3], ["get_var", "imm_alignment"]], 0, 7], # imm7
+			["bits", 1, 0,1,0, 0, 1,0,1, 0],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []] # opc
+		]
+	},
+	{
+		keyword: "ldp_pre_index",
+		name: "Load Pair (pre-index, signed offset)",
+		description: "Loads data for two registers from memory at the address specified by the third register, with a signed immediate offset added permanently before reading, and writes the data to two general-purpose registers.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Content Register 1"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Content Register 2"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 64}, name: "Address Register"}, {type: "immediate", name: "Address Offset"}],
+		bitsize: 32,
+		mc_constructor: [
+			# Check for register sizes
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "ldp_pre_index Error: Register sizes are not the same"]],
+			# Establish the immediate offset alignment using the register size
+			["set_var", "imm_alignment", ["case", ["get_key", ["get_operand", 0], :reg_size], 32, 4, 64, 8, 0]],
+			# Check if the immediate offset is properly aligned
+			["if_eq_else", ["modulo", ["get_operand", 3], ["get_var", "imm_alignment"]], 0, [], ["raise_error", "ldp_pre_index Error: The immediate offset is not properly aligned"]],
+	
+			["get_bits", ["get_key", ["get_operand", 0], :reg_value], 0, 5],
+			["get_bits", ["get_key", ["get_operand", 2], :reg_value], 0, 5],
+			["get_bits", ["get_key", ["get_operand", 1], :reg_value], 0, 5],
+			["get_bits", ["divide", ["get_operand", 3], ["get_var", "imm_alignment"]], 0, 7], # imm7
+			["bits", 1, 1,1,0, 0, 1,0,1, 0],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []] # opc
+		]
+	},
+	{
+		keyword: "ldp_post_index",
+		name: "Load Pair (post-index, signed offset)",
+		description: "Loads data for two registers from memory at the address specified by the third register, with a signed immediate offset added permanently after reading, and writes the data to two general-purpose registers.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Content Register 1"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Content Register 2"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 64}, name: "Address Register"}, {type: "immediate", name: "Address Offset"}],
+		bitsize: 32,
+		mc_constructor: [
+			# Check for register sizes
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "ldp_post_index Error: Register sizes are not the same"]],
+			# Establish the immediate offset alignment using the register size
+			["set_var", "imm_alignment", ["case", ["get_key", ["get_operand", 0], :reg_size], 32, 4, 64, 8, 0]],
+			# Check if the immediate offset is properly aligned
+			["if_eq_else", ["modulo", ["get_operand", 3], ["get_var", "imm_alignment"]], 0, [], ["raise_error", "ldp_post_index Error: The immediate offset is not properly aligned"]],
+	
+			["get_bits", ["get_key", ["get_operand", 0], :reg_value], 0, 5],
+			["get_bits", ["get_key", ["get_operand", 2], :reg_value], 0, 5],
+			["get_bits", ["get_key", ["get_operand", 1], :reg_value], 0, 5],
+			["get_bits", ["divide", ["get_operand", 3], ["get_var", "imm_alignment"]], 0, 7], # imm7
+			["bits", 1, 1,0,0, 0, 1,0,1, 0],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []] # opc
+		]
+	},
+	
 	{
 		keyword: "strh",
 		operands: [{type: "register", restrictions: {reg_size: 32}}, {type: "register", restrictions: {reg_size: 64}}],
