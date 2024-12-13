@@ -41,7 +41,7 @@ end
 	{:reg_name=>"w28", :reg_value=>28, :reg_size=>32, :reg_type=>"gpr"},
 	{:reg_name=>"w29", :reg_value=>29, :reg_size=>32, :reg_type=>"gpr"},
 	{:reg_name=>"w30", :reg_value=>30, :reg_size=>32, :reg_type=>"gpr"},
-	{:reg_name=>"w31", :reg_value=>31, :reg_size=>32, :reg_type=>"gpr"}
+	{:reg_name=>"w31", :reg_value=>31, :reg_size=>32, :reg_type=>"gpr"},
 	{:reg_name=>"x0", :reg_value=>0, :reg_size=>64, :reg_type=>"gpr"},
 	{:reg_name=>"x1", :reg_value=>1, :reg_size=>64, :reg_type=>"gpr"},
 	{:reg_name=>"x2", :reg_value=>2, :reg_size=>64, :reg_type=>"gpr"},
