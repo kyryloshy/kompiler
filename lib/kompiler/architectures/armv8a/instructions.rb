@@ -613,11 +613,11 @@ end
 		bitsize: 32,
 		mc_constructor: [
 			# Check for register sizes
-			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "stp Error: Register sizes are not the same"]],
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "stp_signed Error: Register sizes are not the same"]],
 			# Establish the immediate offset alignment using the register size
 			["set_var", "imm_alignment", ["case", ["get_key", ["get_operand", 0], :reg_size], 32, 4, 64, 8, 0]],
 			# Check if the immediate offset is properly aligned
-			["if_eq_else", ["modulo", ["get_operand", 3], ["get_var", "imm_alignment"]], 0, [], ["raise_error", "stp Error: The immediate offset is not properly aligned"]],
+			["if_eq_else", ["modulo", ["get_operand", 3], ["get_var", "imm_alignment"]], 0, [], ["raise_error", "stp_signed Error: The immediate offset is not properly aligned"]],
 
 			["get_bits", ["get_key", ["get_operand", 0], :reg_value], 0, 5],
 			["get_bits", ["get_key", ["get_operand", 2], :reg_value], 0, 5],
@@ -635,11 +635,11 @@ end
 		bitsize: 32,
 		mc_constructor: [
 			# Check for register sizes
-			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "stp Error: Register sizes are not the same"]],
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "stp_pre_index Error: Register sizes are not the same"]],
 			# Establish the immediate offset alignment using the register size
 			["set_var", "imm_alignment", ["case", ["get_key", ["get_operand", 0], :reg_size], 32, 4, 64, 8, 0]],
 			# Check if the immediate offset is properly aligned
-			["if_eq_else", ["modulo", ["get_operand", 3], ["get_var", "imm_alignment"]], 0, [], ["raise_error", "stp Error: The immediate offset is not properly aligned"]],
+			["if_eq_else", ["modulo", ["get_operand", 3], ["get_var", "imm_alignment"]], 0, [], ["raise_error", "stp_pre_index Error: The immediate offset is not properly aligned"]],
 	
 			["get_bits", ["get_key", ["get_operand", 0], :reg_value], 0, 5],
 			["get_bits", ["get_key", ["get_operand", 2], :reg_value], 0, 5],
@@ -657,11 +657,11 @@ end
 		bitsize: 32,
 		mc_constructor: [
 			# Check for register sizes
-			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "stp Error: Register sizes are not the same"]],
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "stp_post_index Error: Register sizes are not the same"]],
 			# Establish the immediate offset alignment using the register size
 			["set_var", "imm_alignment", ["case", ["get_key", ["get_operand", 0], :reg_size], 32, 4, 64, 8, 0]],
 			# Check if the immediate offset is properly aligned
-			["if_eq_else", ["modulo", ["get_operand", 3], ["get_var", "imm_alignment"]], 0, [], ["raise_error", "stp Error: The immediate offset is not properly aligned"]],
+			["if_eq_else", ["modulo", ["get_operand", 3], ["get_var", "imm_alignment"]], 0, [], ["raise_error", "stp_post_index Error: The immediate offset is not properly aligned"]],
 	
 			["get_bits", ["get_key", ["get_operand", 0], :reg_value], 0, 5],
 			["get_bits", ["get_key", ["get_operand", 2], :reg_value], 0, 5],
