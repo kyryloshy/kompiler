@@ -78,6 +78,18 @@ end
 		],
 		bitsize: 32
 	},
+	
+	
+	{
+		keyword: "eret",
+		name: "Exception Return",
+		description: "Restores PSTATE from SPSR, and branches to the address held in ELR. ",
+		operands: [],
+		mc_constructor: [
+			["bits", 0,0,0,0,0, 1,1,1,1,1, 0, 0, 0,0,0,0, 1,1,1,1,1, 0,0,1, 0, 1,1,0,1,0,1,1],
+		],
+		bitsize: 32
+	},
 ]
 
 end # Kompiler::ARMv8A
