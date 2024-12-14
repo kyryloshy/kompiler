@@ -75,12 +75,15 @@ end
 	},
 	{
 		keyword: "add",
-		operands: [{type: "register", restrictions: {reg_size: 64}}, {type: "register", restrictions: {reg_size: 64}}, {type: "immediate", restrictions: {}}],
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}}, {type: "register", restrictions: {reg_type: "gpr"}}, {type: "immediate"}],
 		mc_constructor: [
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "add Error: Register sizes are not the same"]],
+
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
 			["get_bits", ["get_operand", 2], 0, 12],
-			["bits", 0, 0,1,0,0,0,1,0,0,1]
+			["bits", 0, 0,1,0,0,0,1,0,0],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # sf
 		],
 		bitsize: 32
 	},
@@ -89,15 +92,20 @@ end
 		keyword: "add",
 		name: "ADD (registers)",
 		description: "Adds two source registers and writes the result to the destination register",
-		operands: [{type: "register", restrictions: {reg_size: 64}}, {type: "register", restrictions: {reg_size: 64}}, {type: "register", restrictions: {reg_size: 64}}],
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}}, {type: "register", restrictions: {reg_type: "gpr"}}, {type: "register", restrictions: {reg_type: "gpr"}}],
 		mc_constructor: [
+			# Make sure register sizes are the same
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "add Error: Register sizes are not the same"]],
+			["if_eq_else", ["get_key", ["get_operand", 1], :reg_size], ["get_key", ["get_operand", 2], :reg_size], [], ["raise_error", "add Error: Register sizes are not the same"]],
+
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5], # Rd
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5], # Rn
 			["get_bits", 0, 0, 6], # imm6
 			["get_bits", ["encode_gp_register", ["get_operand", 2]], 0, 5], # Rm
 			["bits", 0],
 			["bits", 0,0], # shift
-			["bits", 1,1,0,1,0, 0, 0, 1], # sf at the end
+			["bits", 1,1,0,1,0, 0, 0],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []], # sf
 		],
 		bitsize: 32
 	},
