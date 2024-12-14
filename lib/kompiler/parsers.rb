@@ -303,8 +303,8 @@ def self.parse_instruction_line(line)
 			i += 1
 		end
 		
-		# After operand content was collected, add it to the list of operands
-		operand_strings << operand_content
+		# After operand content was collected, add it to the list of operands if the content isn't empty
+		operand_strings << operand_content if operand_content.size != 0
 	end	
 	
 	# Parse operand strings into operand types and values
