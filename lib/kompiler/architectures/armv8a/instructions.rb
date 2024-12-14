@@ -281,19 +281,38 @@ end
 		bitsize: 32
 	},
 	
-	
-	
 	{
-		# LDR immediate
 		keyword: "ldr",
-		operands: [{type: "register", restrictions: {reg_size: 64}}, {type: "label"}],
+		name: "Load Register (literal, immediate)",
+		description: "Calculates an adress from the PC value and an immediate offset, loads a word from memory, and writes it to a register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}}, {type: "immediate"}],
 		mc_constructor: [
-			["if_eq_else", ["modulo", ["subtract", ["get_label_address", ["get_operand", 1]], ["get_current_address"]], 4], 0, [], ["raise_error", "Can't represent address for LDR - offset not divisible by 4 bytes."]], # Check if address is accessible
+			["if_eq_else", ["modulo", ["get_operand", 1], 4], 0, [], ["raise_error", "ldr (immediate) Error: Immediate offset is not divisible by four."]], # Check if the immediate offset is right
+
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
+			["get_bits", ["divide", ["get_operand", 1], 4], 0, 19],
+			["bits", 0,0,0,1,1,0],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 32, ["bits", 0], 64, ["bits", 1], 0], # opc size bit
+			["bits", 0], # opc second bit
+		],
+		bitsize: 32
+	},
+	{
+		keyword: "ldr",
+		name: "Load Register (literal, label)",
+		description: "Loads a word from memory at the address specified by the label, and writes it to a register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}}, {type: "label"}],
+		mc_constructor: [
+			["set_var", "immediate_offset", ["subtract", ["get_label_address", ["get_operand", 1]], ["get_current_address"]]],
+			
+			["if_eq_else", ["modulo", ["get_var", "immediate_offset"], 4], 0, [], ["raise_error", "ldr (label) Error: Label not accessible (not divisible by four)."]], # Check if address is accessible
 			
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
-			["get_bits", ["divide", ["subtract", ["get_label_address", ["get_operand", 1]], ["get_current_address"]], 4], 0, 19],
-
-			["bits", 0,0,0,1,1,0,1,0],
+			["get_bits", ["divide", ["get_var", "immediate_offset"], 4], 0, 19],
+	
+			["bits", 0,0,0,1,1,0],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 32, ["bits", 0], 64, ["bits", 1], 0], # opc size bit
+			["bits", 0], # opc second bit
 		],
 		bitsize: 32
 	},
