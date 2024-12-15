@@ -11,32 +11,44 @@ end
 	
 @instructions = [
 	{	keyword: "mov",
-		operands: [{type: "register", restrictions: {reg_size: 64}}, {type: "immediate", restrictions: {}}],
+		name: "Move (immediate)",
+		description: "Moves an immediate value to the destination register",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "immediate", restrictions: {}, name: "Immediate value"}],
 		mc_constructor: [
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
 			["get_bits", ["get_operand", 1], 0, 16],
-			["bits", 0,0, 1,0,1,0,0,1, 0,1, 1]
+			["bits", 0,0, 1,0,1,0,0,1, 0,1],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], 0],
 		],
 		bitsize: 32
 	},
 	{	keyword: "mov",
-		operands: [{type: "register", restrictions: {reg_size: 64}}, {type: "register", restrictions: {reg_size: 64}}],
+		name: "Move (register)",
+		description: "Copies the value in the source register to the destination register",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source"}],
 		mc_constructor: [
+			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "mov Error: Register sizes are not the same"]],
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5], # Rd
 			["bits", 1,1,1,1,1], # rn
 			["bits", 0,0,0,0,0,0], # imm6
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5], # Rm
-			["bits", 0, 0,0, 0,1,0,1,0,1,0, 1]
+			["bits", 0, 0,0, 0,1,0,1,0,1,0],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], 0],
 		],
 		bitsize: 32
 	},
 	{	keyword: "mov_sp",
-		operands: [{type: "register", restrictions: {reg_size: 64}}, {type: "register", restrictions: {reg_size: 64}}],
+		name: "Move (to/from SP)",
+		description: "Move between a general-purpose register and the stack pointer.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}}, {type: "register", restrictions: {reg_type: "gpr"}}],
 		mc_constructor: [
+			# Get the non-SP register
+			["if_eq_else", ["downcase_str", ["get_key", ["get_operand", 0], :reg_name]], "sp", ["set_var", "non_sp_reg", ["get_operand", 1]], ["set_var", "non_sp_reg", ["get_operand", 0]]],
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5], # Rd
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5], # Rn
 			["get_bits", 0, 0, 12], # imm12 as ones
-			["bits", 0, 0,1,0,0,0,1, 0, 0, 1]
+			["bits", 0, 0,1,0,0,0,1, 0, 0],
+			["case", ["get_key", ["get_var", "non_sp_reg"], :reg_size], 64, ["bits", 1], 32, ["bits", 0], 0],
 		],
 		bitsize: 32
 	},
@@ -61,15 +73,6 @@ end
 			["bits", 0,0,0,0,0,0], # imm6 (shift amount) set to zero
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5], # Rm
 			["bits", 1, 0,0, 0,1,0,1,0,1,0, 0] # N - shift type (zero / LSL) - bits
-		],
-		bitsize: 32
-	},
-	{	keyword: "mov",
-		operands: [{type: "register", restrictions: {reg_size: 32}}, {type: "immediate", restrictions: {}}],
-		mc_constructor: [
-			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
-			["get_bits", ["get_operand", 1], 0, 16],
-			["bits", 0,0, 1,0,1,0,0,1, 0,1, 0]
 		],
 		bitsize: 32
 	},
