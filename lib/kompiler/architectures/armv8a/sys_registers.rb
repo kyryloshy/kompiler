@@ -29,6 +29,16 @@ end
 	{reg_name: "ELR_EL2", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>0b11, "op1"=>0b100, "CRn"=>0b0100, "CRm"=>0b0000, "op2"=>0b001}},
 	{reg_name: "ELR_EL3", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>0b11, "op1"=>0b110, "CRn"=>0b0100, "CRm"=>0b0000, "op2"=>0b001}},
 	
+	{reg_name: "SCTLR_EL1", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>0b11, "op1"=>0b000, "CRn"=>0b0001, "CRm"=>0b0000, "op2"=>0b000}},
+	{reg_name: "SCTLR_EL2", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>0b11, "op1"=>0b100, "CRn"=>0b0001, "CRm"=>0b0000, "op2"=>0b000}},
+	{reg_name: "SCTLR_EL3", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>0b11, "op1"=>0b110, "CRn"=>0b0001, "CRm"=>0b0000, "op2"=>0b000}},
+	
+	{reg_name: "SCTLR2_EL1", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>0b11, "op1"=>0b000, "CRn"=>0b0001, "CRm"=>0b0000, "op2"=>0b011}},
+	{reg_name: "SCTLR2_EL2", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>0b11, "op1"=>0b100, "CRn"=>0b0001, "CRm"=>0b0000, "op2"=>0b011}},
+	{reg_name: "SCTLR2_EL3", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>0b11, "op1"=>0b110, "CRn"=>0b0001, "CRm"=>0b0000, "op2"=>0b011}},
+	
+	{reg_name: "HCR_EL2", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>0b11, "op1"=>0b100, "CRn"=>0b0001, "CRm"=>0b0001, "op2"=>0b000}},
+	
 	# Special registers for the MSR (immediate) instruction (some of them were previously defined already)
 	{reg_name: "SPSel", reg_type: "pstate_reg"},
 	{reg_name: "DAIFSet", reg_type: "pstate_reg"},
