@@ -152,12 +152,28 @@ end
 	
 	{
 		keyword: "adr",
-		operands: [{type: "register", restrictions: {reg_size: 64}}, {type: "label"}],
+		name: "Address (label)",
+		description: "Writes the address of the specified label to the destination register through PC-relative computations.",
+		operands: [{type: "register", restrictions: {reg_size: 64}, name: "Destination"}, {type: "label", name: "Label"}],
 		mc_constructor: [
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
 			["get_bits", ["subtract", ["get_label_address", ["get_operand", 1]], ["get_current_address"]], 2, 19],
 			["bits", 0,0,0,0,1],
 			["get_bits", ["subtract", ["get_label_address", ["get_operand", 1]], ["get_current_address"]], 0, 2],
+			["bits", 0],
+		],
+		bitsize: 32
+	},
+	{
+		keyword: "adr",
+		name: "Address (immediate)",
+		description: "Adds an immediate value to the PC Value, and writes the result to the destination register.",
+		operands: [{type: "register", restrictions: {reg_size: 64}, name: "Destination"}, {type: "immediate", name: "Immediate Offset"}],
+		mc_constructor: [
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
+			["get_bits", ["get_operand", 1], 2, 19],
+			["bits", 0,0,0,0,1],
+			["get_bits", ["get_operand", 1], 0, 2],
 			["bits", 0],
 		],
 		bitsize: 32
