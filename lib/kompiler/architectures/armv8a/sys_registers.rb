@@ -24,6 +24,11 @@ end
 	{reg_name: "SPSR_EL2", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>0b11, "op1"=>0b100, "CRn"=>0b0100, "CRm"=>0b0000, "op2"=>0b000}},
 	{reg_name: "SPSR_EL3", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>0b11, "op1"=>0b110, "CRn"=>0b0100, "CRm"=>0b0000, "op2"=>0b000}},
 	
+	{reg_name: "ELR_EL1", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>0b11, "op1"=>0b000, "CRn"=>0b0100, "CRm"=>0b0000, "op2"=>0b001}},
+	{reg_name: "ELR_EL12", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>0b11, "op1"=>0b101, "CRn"=>0b0100, "CRm"=>0b0000, "op2"=>0b001}},
+	{reg_name: "ELR_EL2", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>0b11, "op1"=>0b100, "CRn"=>0b0100, "CRm"=>0b0000, "op2"=>0b001}},
+	{reg_name: "ELR_EL3", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>0b11, "op1"=>0b110, "CRn"=>0b0100, "CRm"=>0b0000, "op2"=>0b001}},
+	
 	# Special registers for the MSR (immediate) instruction (some of them were previously defined already)
 	{reg_name: "SPSel", reg_type: "pstate_reg"},
 	{reg_name: "DAIFSet", reg_type: "pstate_reg"},
