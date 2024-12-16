@@ -17,6 +17,7 @@ end
 	{reg_name: "vbar_el2", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>0b11, "op1"=>0b100, "CRn"=>0b1100, "CRm"=>0, "op2"=>0}, rw_type: "rw"},
 	{reg_name: "vbar_el3", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>0b11, "op1"=>0b110, "CRn"=>0b1100, "CRm"=>0, "op2"=>0}, rw_type: "rw"},
 
+	{reg_name: "currentEL", reg_size: 64, reg_type: "sr", reg_encoding: {"op0"=>0b11, "op1"=>0b000, "CRn"=>0b0100, "CRm"=>0b0010, "op2"=>0b010}},
 	
 	# Special registers for the MSR (immediate) instruction (some of them were previously defined already)
 	{reg_name: "SPSel", reg_type: "pstate_reg"},
