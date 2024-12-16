@@ -347,7 +347,7 @@ end
 	{
 		keyword: "ldr_unsigned",
 		name: "Load Register (immediate), unsigned offset",
-		description: "Loads 4 or 8 bytes from memory at the address in the second register with an unsigned immediate offset, and writes it to the destination register",
+		description: "Loads 4 or 8 bytes from memory at the address in the second register, with an unsigned immediate offset added, and writes it to the destination register.",
 		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 64}, name: "Source address"}, {type: "immediate", name: "Offset"}],
 		mc_constructor: [
 			["case", ["get_key", ["get_operand", 0], :reg_size],
@@ -365,6 +365,38 @@ end
 				],
 			0, 12],			
 			["bits", 1,0, 1,0, 0, 1,1,1],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []],
+			["bits", 1],
+		],
+		bitsize: 32
+	},
+	{
+		keyword: "ldr_post_index",
+		name: "Load Register (immediate), post-index",
+		description: "Loads 4 or 8 bytes from memory at the address in the second register, with an immediate value added permanently after reading, and writes it to the destination register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 64}, name: "Source address"}, {type: "immediate", name: "Address Offset"}],
+		mc_constructor: [
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
+			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
+			["bits", 1,0],
+			["get_bits", ["get_operand", 2], 0, 9],
+			["bits", 0, 1,0, 0,0, 0, 1,1,1],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []],
+			["bits", 1],
+		],
+		bitsize: 32
+	},
+	{
+		keyword: "ldr_pre_index",
+		name: "Load Register (immediate), pre-index",
+		description: "Loads 4 or 8 bytes from memory at the address in the second register, with an immediate value added permanently before reading, and writes it to the destination register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 64}, name: "Source address"}, {type: "immediate", name: "Address Offset"}],
+		mc_constructor: [
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
+			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
+			["bits", 1,1],
+			["get_bits", ["get_operand", 2], 0, 9],
+			["bits", 0, 1,0, 0,0, 0, 1,1,1],
 			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []],
 			["bits", 1],
 		],
