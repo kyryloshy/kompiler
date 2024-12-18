@@ -924,6 +924,37 @@ end
 		bitsize: 32
 	},
 	
+	{
+		keyword: "sev",
+		name: "Send Event",
+		description: "A hint instruction that causes an event to be signalled to all cores in a multiprocessor system.",
+		operands: [],
+		mc_constructor: [
+			["bits", 1,1,1,1,1, 0,0,1, 0,0,0,0, 0,1,0,0, 1,1,0, 0,0, 0, 0,0,1,0,1,0,1,0,1,1]
+		],
+		bitsize: 32
+	},
+	{
+		keyword: "wfe",
+		name: "Wait For Event",
+		description: "A hint instruction that indicates that the PE can enter a low-power state and remain there until a wakeup event occurs. Wakeup events include the event signaled using SEV.",
+		operands: [],
+		mc_constructor: [
+			["bits", 1,1,1,1,1, 0,1,0, 0,0,0,0, 0,1,0,0, 1,1,0, 0,0, 0, 0,0,1,0,1,0,1,0,1,1]
+		],
+		bitsize: 32
+	},
+	{
+		keyword: "wfi",
+		name: "Wait For Interrupt",
+		description: "A hint instruction that indicates that the PE can enter a low-power state and remain there until a wakeup event occurs.",
+		operands: [],
+		mc_constructor: [
+			["bits", 1,1,1,1,1, 1,1,0, 0,0,0,0, 0,1,0,0, 1,1,0, 0,0, 0, 0,0,1,0,1,0,1,0,1,1]
+		],
+		bitsize: 32
+	},
+	
 	
 	#
 	# B.cond instructions
