@@ -954,6 +954,18 @@ end
 		],
 		bitsize: 32
 	},
+	{
+		keyword: "svc",
+		name: "Supervisor Call",
+		description: "Triggers a synchronous exception taken to EL1, passing an immediate value to the ESR_ELx system register.",
+		operands: [{type: "immediate", name: "Immediate"}],
+		mc_constructor: [
+			["bits", 1,0, 0,0,0],
+			["get_bits", ["get_operand", 0], 0, 16],
+			["bits", 0,0,0, 0,0,1,0,1,0,1,1],
+		],
+		bitsize: 32
+	},
 	
 	
 	#
