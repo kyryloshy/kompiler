@@ -83,6 +83,113 @@ def self.parse_includes(lines, loaded_files=[])
 end
 
 
+def self.parse_macros(lines)
+
+	macros = []
+
+	line_i = 0
+	
+	loop do
+		break if line_i >= lines.size
+		
+		line = lines[line_i]
+		
+		keyword, operands = Kompiler::Parsers.parse_instruction_line line
+		
+		keyword = keyword[1..] if keyword.start_with? "."
+		
+		if keyword == 'macro'
+			raise "Macro definition error: Expected two operands to be provided, while #{operands.size} were given" if operands.size != 2
+			raise "Macro definition error: The macro name must either be a word or a string" if !["label", "string"].include?(operands[0][:type])
+			
+			case operands[0][:type]
+			when "label"
+				macro_name = operands[0][:value]
+			when "string"
+				macro_name = operands[0][:value]
+			end
+			
+			macro_definition = operands[1][:definition]
+			
+			macros << {name: macro_name, definition: macro_definition}
+			
+			lines.delete_at line_i
+		else
+			line_i += 1
+		end
+	end
+	
+	# Apply the macros to all lines, and then the lines that were changed, and than again, and so on (iterative loop until none of the lines need to be checked)
+	
+	lines_to_check = (0...lines.size).to_a
+	
+	while lines_to_check.size != 0 # Repeat until no more lines to check		
+
+		# Define restricted separators characters (characters that CAN'T separate a macro from everything else)
+		restricted_separator_chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a + ["_", "."]
+		
+		# Create an array for the lines to check once again
+		new_lines_to_check = []
+		
+		lines_to_check.each do |line_i|
+			line = lines[line_i]
+			
+			char_i = 0
+			
+			# Create a variable to indicate if a macro was used on the current line 
+			line_macro_used = false
+			
+			loop do
+				break if char_i >= line.size
+				
+				if ['"', "'"].include? line[char_i]
+					# If a string, skip it
+					str, parsed_length = Kompiler::Parsers.parse_str line[char_i..]
+					char_i += parsed_length
+					next
+				end
+				
+				cut_line = line[char_i..]			
+				
+				# Create a variable to indicate if a macro was used in the current position
+				macro_used = false			
+				
+				macros.each do |macro|
+					macro_name = macro[:name]
+					macro_def = macro[:definition]
+					next if !cut_line.start_with?(macro_name) # Skip if doesn't begin with the macro's name
+					next if (cut_line.size > macro_name.size) && restricted_separator_chars.include?(cut_line[macro_name.size]) # Skip if there is a character after the macro name, and the character is not permitted
+					next if (char_i > 0) && restricted_separator_chars.include?(line[char_i - 1]) # Skip if there is a character before the checking sequence, and the character is not permitted
+					
+					# Here if the macro is 'accepted'
+					line = line[...char_i] + macro_def + line[(char_i + macro_name.size)..]
+					# Indicate that a macro was used
+					macro_used = true
+				end
+				
+				if macro_used
+					# If a macro was used, indicate that on line level
+					line_macro_used = true
+				else
+					# If a macro wasn't used, proceed to the next character
+					char_i += 1
+				end
+			end # line characters loop
+			
+			if line_macro_used
+				# If a macro was used on the current line, update the lines array, and add the line to check for macros again
+				lines[line_i] = line
+				new_lines_to_check << line_i
+			end
+		end # lines_to_check.each loop
+		
+		lines_to_check = new_lines_to_check # Update lines to check with the new ones
+	
+	end # while lines_to_check.size != 0 loop
+
+	lines
+end
+
 
 def self.parse_code(lines)	
 	
@@ -97,7 +204,7 @@ def self.parse_code(lines)
 		if !is_char_whitespace.include?(false) # If only whitespace
 			next # Skip
 		end
-	
+		
 		#
 		# Label definitions are now a directive, so this isn't needed
 		#
@@ -243,17 +350,19 @@ end
 def self.compile(code, included_files=[])
 
 	lines = Kompiler::Parsers.get_code_lines(code)
-
-	final_lines = parse_includes(lines, included_files.map{|fname| File.expand_path(fname)})
-
-	parsed_lines = parse_code(final_lines)
+	
+	included_lines = parse_includes(lines, included_files.map{|fname| File.expand_path(fname)})
+	
+	macroed_lines = parse_macros(included_lines)
+	
+	parsed_lines = parse_code(macroed_lines)
 	
 	labels = get_labels(parsed_lines)	
 	
 #	machine_code_bit_lines = construct_program_mc(parsed_lines, labels)
 #
 #	machine_code_bytes = bit_lines_to_bytes(machine_code_bit_lines)	
-
+	
 	machine_code_bytes = construct_program_mc(parsed_lines, labels)
 end
 
