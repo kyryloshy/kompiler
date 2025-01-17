@@ -3,7 +3,7 @@
 
 module Kompiler
 
-class CompilerFunctions
+module CompilerFunctions
 
 def self.parse_includes(lines, loaded_files=[])
 	

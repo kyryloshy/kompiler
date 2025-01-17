@@ -4,7 +4,7 @@
 module Kompiler
 
 	# Object for managing architecture entries / available architectures
-	class ArchManager
+	module ArchManager
 		@arch_entries = []
 		
 		def self.add_arch(arch_name, include_path)

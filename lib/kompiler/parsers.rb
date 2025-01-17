@@ -3,7 +3,7 @@
 
 module Kompiler
 
-class Parsers
+module Parsers
 
 def self.parse_str(code)
 
