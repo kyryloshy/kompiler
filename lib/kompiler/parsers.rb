@@ -195,7 +195,7 @@ def self.check_label_operand(str)
 	return false if ("0".."9").to_a.include?(str[0])
 
 	# Check if it's only made up of allowed characters
-	allowed_chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a + ["_"] 
+	allowed_chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a + ["_", "."]
 	
 	is_each_char_allowed = str.each_char.map{|c| allowed_chars.include?(c)}
 	
@@ -366,10 +366,9 @@ end
 
 # Returns array of [status, operands]
 # If status = false, operands = nil; otherwise, status = true, operands = instruction operands
-def self.match_instruction(line, instruction)
+def self.match_parsed_line_to_instruction(parsed_line, instruction)
 
-	keyword, operands = parse_instruction_line(line)
-
+	keyword, operands = parsed_line
 
 	# Check if the keyword matches
 	if instruction[:keyword] != keyword
@@ -396,9 +395,12 @@ def self.check_instruction(line)
 	instruction = nil
 	operands = nil
 	
+	parsed_line = Kompiler::Parsers.parse_instruction_line(line)
+	
 	Kompiler::Architecture.instructions.each do |curr_instruction|
 		# If the instruction matches - break
-		status, curr_operands = match_instruction(line, curr_instruction)
+		
+		status, curr_operands = match_parsed_line_to_instruction(parsed_line, curr_instruction)
 		if status == true
 			instruction = curr_instruction
 			operands = curr_operands
