@@ -235,41 +235,15 @@ def self.parse_operand_str(operand_str)
 	return false
 end
 
-
-
-
-def self.parse_instruction_line(line)
-	keyword = ""
+# Extract operand strings from the structure "op1, op2, op3, ..."
+# Returns an array of the operand strings
+def self.extract_instruction_operands(line)
 	i = 0
-	
-	# Loop until a non-whitespace character
-	while i < line.size
-		break if ![" ", "\t"].include?(line[i])
-		i += 1
-	end
-
-	# Loop to get the keyword
-	loop do
-		# Exit out of the loop if the character is a whitespace
-		break if [" ", "\t"].include?(line[i]) || i >= line.size
-		# Add the character if not a whitespace
-		keyword << line[i]
-		# Proceed to the next character
-		i += 1	
-	end
-
 	operand_strings = []
 	
-	# Loop for operands
 	loop do
 		break if i >= line.size
-
-		# # Whitespace - skip
-		# if [" ", "\t"].include? line[i]
-		# 	i += 1
-		# 	next
-		# end
-
+		
 		operand_content = ""
 		
 		# Collect the operand's content until a comma or end of line
@@ -283,13 +257,13 @@ def self.parse_instruction_line(line)
 			end
 			
 			# Skip whitespace
-			if [" ", "\t"].include? line[i]
+			if Kompiler::Config.whitespace_chars.include? line[i]
 				i += 1
 				next
 			end
 			
 			# If a string definition, parse to the end of the string
-			if ["\"", "'"].include?(line[i])
+			if Kompiler::Config.string_delimiters.include?(line[i])
 				str_content, parsed_size = parse_str(line[i..])
 				operand_content += line[i] + str_content + line[i]
 				i += parsed_size
@@ -305,7 +279,45 @@ def self.parse_instruction_line(line)
 		
 		# After operand content was collected, add it to the list of operands if the content isn't empty
 		operand_strings << operand_content if operand_content.size != 0
-	end	
+	end
+
+	operand_strings
+end
+
+
+def self.extract_instruction_parts(line)
+
+	keyword = ""
+	i = 0
+	
+	# Loop until a non-whitespace character
+	while i < line.size
+		break if ![" ", "\t"].include?(line[i])
+		i += 1
+	end
+	
+	# Loop to get the keyword
+	loop do
+		# Exit out of the loop if the character is a whitespace
+		break if [" ", "\t"].include?(line[i]) || i >= line.size
+		# Add the character if not a whitespace
+		keyword << line[i]
+		# Proceed to the next character
+		i += 1	
+	end
+	
+	operand_strings = extract_instruction_operands(line[i..])
+	
+	# Loop for operands
+	
+	return keyword, operand_strings
+end
+
+
+
+def self.parse_instruction_line(line)
+	
+	keyword, operand_strings = extract_instruction_parts(line)
 	
 	# Parse operand strings into operand types and values
 	
@@ -418,12 +430,20 @@ end
 
 
 def self.check_directive(line)
-	status = parse_instruction_line(line)
-
-	return [false, nil] if status == false
-
-	keyword, operands = status
-
+	# Skip whitespace
+	char_i = 0
+	while char_i < line.size && Kompiler::Config.whitespace_chars.include?(line[char_i])
+		char_i += 1
+	end
+	
+	# Collect the keyword
+	keyword = ""
+	
+	while char_i < line.size && Kompiler::Config.keyword_chars.include?(line[char_i])
+		keyword << line[char_i]
+		char_i += 1
+	end
+	
 	if keyword[0] == "."
 		keyword = keyword[1..]
 	end
@@ -431,16 +451,35 @@ def self.check_directive(line)
 	directive = nil
 	
 	Kompiler::Directives.directives.each do |curr_directive|
-		if curr_directive[:keyword] == keyword
-			directive = curr_directive
-			break
+		if curr_directive[:keyword].is_a? String
+			if curr_directive[:keyword] == keyword
+				directive = curr_directive
+				break
+			end
+		elsif curr_directive[:keyword].is_a? Array
+			if curr_directive[:keyword].include? keyword
+				directive = curr_directive
+				break
+			end
+		else
+			raise "Directive name error"
 		end
 	end
 	
 	if directive == nil
 		return [false, nil]
+	end
+	
+	# Check if the directive requires pre-collected operands (with the :collect_operands key that is true by default)
+	if !directive.keys.include?([:collect_operands]) || directive[:collect_operands] == true
+		parse_status, operands = parse_instruction_line(line)
+		
+		return [false, nil] if parse_status == false # Return negative if operands can't be parsed
+		
+		return [true, {directive: directive, operands: operands}] # Otherwise, return the directive
 	else
-		return [true, {directive: directive, operands: operands}]
+		# If operand collection isn't required, return the directive
+		return [true, {directive: directive, operands: []}]
 	end
 end
 
