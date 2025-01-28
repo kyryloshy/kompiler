@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require 'kompiler/config.rb'
 require 'kompiler/mc_builder.rb'
 require 'kompiler/parsers.rb'
 require 'kompiler/compiler_functions.rb'
