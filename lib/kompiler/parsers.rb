@@ -292,14 +292,14 @@ def self.extract_instruction_parts(line)
 	
 	# Loop until a non-whitespace character
 	while i < line.size
-		break if ![" ", "\t"].include?(line[i])
+		break if !Kompiler::Config.whitespace_chars.include?(line[i])
 		i += 1
 	end
 	
 	# Loop to get the keyword
 	loop do
 		# Exit out of the loop if the character is a whitespace
-		break if [" ", "\t"].include?(line[i]) || i >= line.size
+		break if Kompiler::Config.whitespace_chars.include?(line[i]) || i >= line.size
 		# Add the character if not a whitespace
 		keyword << line[i]
 		# Proceed to the next character

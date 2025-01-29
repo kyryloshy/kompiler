@@ -19,7 +19,7 @@ def self.parse_code(lines)
 		line = lines[line_i]
 		
 		# Check if line is not just whitespace
-		is_char_whitespace = line.each_char.map{|c| [" ", "\t"].include? c}
+		is_char_whitespace = line.each_char.map{|c| Kompiler::Config.whitespace_chars.include? c}
 		if !is_char_whitespace.include?(false) # If only whitespace
 			line_i += 1
 			next # Skip
