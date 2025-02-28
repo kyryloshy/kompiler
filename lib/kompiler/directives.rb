@@ -122,8 +122,7 @@ end
 	{
 		keyword: "bytes",
 		func: lambda do |operands, state|
-			
-			raise "Incorrect use of the \"bytes\" directive." if (operands.size != 2) || (operands[0][:type] != "immediate" && operands[1][:type] != "immediate")			
+			raise "Incorrect use of the \"bytes\" directive." if (operands.size != 2) || (operands[0][:type] != "immediate" || operands[1][:type] != "immediate")			
 			
 			
 			n_bytes = operands[0][:value]
@@ -310,7 +309,13 @@ end
 				
 			end
 			
-			state[:lines] = state[:lines][...state[:line_i]] + scan_lines
+			
+			state[:extra_state][:values] = Array.new if !state[:extra_state].keys.include?(:values)
+			
+			state[:extra_state][:values] << {name: value_name, def_value: value_def}
+			
+			
+			state[:lines] = state[:lines][..state[:line_i]] + scan_lines
 			
 			state[:line_i] += 1
 			
@@ -371,7 +376,7 @@ end
 			
 			whitespace_regexp = /[#{Kompiler::Config.whitespace_chars.join("|")}]*/
 			
-			endmacro_regexp = /\A#{whitespace_regexp}\.endmacro#{whitespace_regexp}\z/
+			endmacro_regexp = /\A#{whitespace_regexp}\.?endmacro#{whitespace_regexp}\z/
 			
 			while line_i < state[:lines].size
 				break if state[:lines][line_i].match? endmacro_regexp # Check if it's an end macro instruction
@@ -481,7 +486,7 @@ end
 				end
 				
 				# Build the replacement lines for the macro call
-				build_lines = def_lines.dup
+				build_lines = def_lines.map{|line| line.dup} # Copying strings inside array, because array.dup doesn't work for elements
 				
 				arg_insert_locations_regrouped.each_with_index do |locations, line_i|
 					# Sort the locations by the insert character from largest to smallest, so that the inserts are made from end to start
