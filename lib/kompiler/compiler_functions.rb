@@ -15,6 +15,8 @@ def self.parse_code(lines)
 
 	extra_state = Hash.new
 	
+	add_later_directives = []
+	
 	while line_i < lines.size
 		line = lines[line_i]
 		
@@ -43,7 +45,51 @@ def self.parse_code(lines)
 			
 			state = {current_address: instr_adr, parsed_lines: parsed_lines, lines: lines, line_i: line_i, extra_state: extra_state}
 			
-			state = directive[:func].call(operands, state)
+			add_later_directive = false
+			
+			if directive.keys.include?(:add_later_directive) && directive[:add_later_directive] == true
+				add_later_directive = true
+			end
+			
+			new_operands = operands.map do |op|
+				if op[:type] == "run_block"
+					begin
+						block_state = state.dup
+						block_state[:block_args] = op[:block_args]
+						block_state[:labels] = self.get_labels(parsed_lines)
+						op = op[:block].call(block_state)
+					rescue
+						add_later_directive = true
+						op = {type: "immediate", value: 0, def_type: "kompiler_test_value", definition: "0"}
+					end
+				end
+				op
+			end
+			
+			
+			if add_later_directive
+				
+				try_state = {current_address: instr_adr, parsed_lines: parsed_lines.dup, lines: lines.dup, line_i: line_i, extra_state: extra_state.dup}
+				
+				try_state = directive[:func].call(new_operands, try_state)
+				
+				
+				instr_adr = try_state[:current_address]
+				line_i = try_state[:line_i]
+				
+				raise "Directive error 1.1" if !(lines == try_state[:lines])
+				raise "Directive error 1.2" if !(extra_state == try_state[:extra_state])
+				raise "Directive error 1.3" if !(parsed_lines == try_state[:parsed_lines][...parsed_lines.size]) # Check that the previous parsed lines were not changed by the directive
+				
+				state.delete :parsed_lines
+				state.delete :lines
+				
+				add_later_directives << {directive_hash: directive_hash, insert_i: parsed_lines.size, run_state: state, return_line_i: line_i, return_current_address: instr_adr}
+				
+				next
+			end
+			
+			state = directive[:func].call(new_operands, state)
 		
 			instr_adr = state[:current_address]
 			parsed_lines = state[:parsed_lines]
@@ -60,6 +106,37 @@ def self.parse_code(lines)
 		
 		raise "\"#{line}\" - Unknown syntax: Program build not possible"
 		
+	end	
+
+	add_later_directives.sort_by{|hash| hash[:insert_i]}.reverse.each do |add_later_directive|
+		directive_hash = add_later_directive[:directive_hash]
+		insert_i = add_later_directive[:insert_i]
+		state = add_later_directive[:run_state]
+		
+		state[:parsed_lines] = parsed_lines[...insert_i]
+		state[:lines] = lines
+		
+		directive = directive_hash[:directive]
+		operands = directive_hash[:operands]
+		
+		new_operands = operands.map do |op|
+			if op[:type] == "run_block"
+				block_state = state.dup
+				block_state[:block_args] = op[:block_args]
+				block_state[:labels] = self.get_labels(parsed_lines)
+				op = op[:block].call(block_state)
+			end
+			op
+		end
+		
+		state = directive[:func].call(new_operands, state)
+		
+		
+		raise "Directive error 2.1" if add_later_directive[:return_current_address] != state[:current_address]
+		raise "Directive error 2.2" if add_later_directive[:return_line_i] != state[:line_i]
+		
+		
+		parsed_lines = state[:parsed_lines] + parsed_lines[insert_i..]
 	end
 	
 	parsed_lines
@@ -94,8 +171,20 @@ def self.construct_program_mc(parsed_lines, labels)
 	parsed_lines.each do |line|
 		case line[:type]
 		when "instruction"
-			program_state[:operands] = line[:operands]
 			program_state[:current_address] = line[:address]
+			
+			operands = line[:operands]
+			operands.map! do |op|
+				if op[:type] == "run_block"
+					state = program_state.dup
+					state[:block_args] = op[:block_args]
+					op = op[:block].call(state)
+				end
+				op
+			end
+			
+			program_state[:operands] = operands
+			
 			
 			mc_constructor = line[:instruction][:mc_constructor]
 			

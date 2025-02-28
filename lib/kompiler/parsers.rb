@@ -171,6 +171,29 @@ def self.check_char_operand(str)
 end
 
 
+def self.check_expression_operand(str)
+	begin
+		
+		ast = Kompiler::Parsers::SymAST.parse str
+		
+		run_block = lambda do |state|
+			state[:labels]["here"] = state[:current_address]
+			
+			ast_result = Kompiler::Parsers::SymAST.run_ast state[:block_args][:ast], state[:labels], []
+			
+			return {type: "immediate", value: ast_result, def_type: "sym_ast", definition: state[:block_args][:definition]}
+		end
+		
+		return [true, {type: "run_block", block: run_block, block_args: {ast: ast, definition: str}, block_output_type: "immediate"}]
+		
+	rescue RuntimeError => e
+		p e
+		# If an error was caused, return false
+		return [false, nil]
+	end
+
+end
+
 
 def self.check_immediate_operand(operand_str)
 	
@@ -230,6 +253,9 @@ def self.parse_operand_str(operand_str)
 	is_label = check_label_operand(operand_str)
 	return {type: "label", value: operand_str, definition: operand_str} if is_label
 	
+	
+	is_expr, expr_operand = check_expression_operand(operand_str)
+	return expr_operand if is_expr
 	
 	# If no checks succeeded, return false
 	return false
@@ -336,8 +362,12 @@ end
 
 def self.check_operand_match(operand_description, operand)
 
-	# If operand type doesn't not match, return false
-	return false if operand[:type] != operand_description[:type]
+	if operand[:type] == "run_block" # A special check for a run block
+		return false if operand[:block_output_type] != operand_description[:type]
+	else
+		# If operand type doesn't not match, return false
+		return false if operand[:type] != operand_description[:type]
+	end
 
 	# Get the restrictions
 	operand_restrictions = operand_description[:restrictions]
@@ -349,6 +379,8 @@ def self.check_operand_match(operand_description, operand)
 		operand_encoding = operand[:value]
 	when "immediate"
 		operand_encoding = operand[:value]
+	when "run_block"
+		operand_encoding = Hash.new
 	when "string"
 		operand_encoding = Hash.new
 	end
