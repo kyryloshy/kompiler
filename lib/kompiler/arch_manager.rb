@@ -20,7 +20,7 @@ module Kompiler
 		end
 		
 		def self.load_all_entries
-			Dir[File.join(__dir__, 'arch_entries', '*.rb')].each { |file| require file }
+			Gem.find_files("kompiler/arch_entries/*").each { |file| require file }
 		end
 	end
 
