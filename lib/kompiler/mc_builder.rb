@@ -44,6 +44,13 @@ module MachineCode_AST
 	{name: "raise_warning", n_args: 1, func: lambda {|args, state| puts args[0]; [] } },
 	
 	{name: "get_key", n_args: 2, func: lambda {|args, state| args[0].keys.include?(args[1]) ? args[0][args[1]] : raise("MC Constructor get_key Error: The key \"#{args[1]}\" doesn't exist - Program build not possible. This is likely a problem with the ISA configuration, not the program being compiled.") }},
+
+	# Concatenation of get_key and get_operand through get_key(get_operand(arg1), arg2)
+	{name: "get_operand_key", n_args: 2, func: lambda do |args, state|
+		op = state[:operands][args[0]][:value]
+		op.keys.include?(args[1]) ? op[args[1]] : raise("MC Constructor get_operand_key Error: key \"#{args[1]}\" doesn't exist. This is likely an error with the ISA configuration, not the program being compiled.")
+	end},
+
 	{name: "concat", n_args: "any", func: lambda {|args, state| args.flatten}},
 	{name: "set_var", n_args: 2, func: lambda {|args, state| state[:instruction_variables][args[0]] = args[1]; [] }},
 	{name: "get_var", n_args: 1, func: lambda {|args, state| state[:instruction_variables].keys.include?(args[0]) ? state[:instruction_variables][args[0]] : raise("Instruction variable \"#{args[0]}\" not found: Program build not possible. This is likely a program with the ISA configuration, not the program being compiled.") }},
@@ -54,6 +61,16 @@ module MachineCode_AST
 	# Bit manipulations
 	{name: "bit_and", n_args: 2, func: lambda {|args, state| args[0] & args[1] }},
 	{name: "bit_or", n_args: 2, func: lambda {|args, state| args[0] | args[1] }},
+
+	# Ensure equality between all arguments. Last argument provides the error message if not equal
+	{name: "ensure_eq", n_args: "any", func: lambda do |args, state|
+		args[1...-1].each do |arg|
+			if args[0] != arg
+				raise args.last
+			end
+		end
+		[]
+	end}
 ]
 
 def self.is_ast_node(val)
