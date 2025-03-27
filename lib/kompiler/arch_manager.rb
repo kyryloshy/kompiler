@@ -22,6 +22,10 @@ module Kompiler
 		def self.load_all_entries
 			Gem.find_files("kompiler/arch_entries/*").each { |file| require file }
 		end
+
+		def self.load_arch arch_name
+			require get_arch(arch_name)[:include_path]
+		end
 	end
 
 end
