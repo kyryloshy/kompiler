@@ -48,6 +48,38 @@ if (ARGV.size == 1) && ["--list-architectures", "-L"].include?(ARGV[0])
 	exit # Exit
 end
 
+if ["--list-instructions"].include?(ARGV[0]) && [1,2].include?(ARGV.size)
+	arch_name = ARGV[1] || "armv8a"
+	Kompiler::ArchManager.load_all_entries()
+	arch = Kompiler::ArchManager.get_arch(arch_name)
+
+	require arch[:include_path]
+
+	Kompiler::Architecture.instructions.each do |instr|
+		puts "#{instr[:keyword]} (#{instr[:operands].size} operands): #{instr[:name]}"
+		puts instr[:description]
+		puts
+	end
+
+	exit
+end
+
+if ["--list-registers"].include?(ARGV[0]) && [1,2].include?(ARGV.size)
+	arch_name = ARGV[1] || "armv8a"
+	Kompiler::ArchManager.load_all_entries()
+	arch = Kompiler::ArchManager.get_arch(arch_name)
+
+	require arch[:include_path]
+
+	Kompiler::Architecture.registers.each do |reg|
+		puts "#{reg[:reg_name]}"
+	end
+
+	exit
+end
+
+
+
 in_filename = ARGV[0]
 out_filename = ARGV[1]
 arch_name = ARGV[2] || "armv8a"
