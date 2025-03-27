@@ -1148,6 +1148,49 @@ end
 		bitsize: 32
 	},
 	
+	{
+		keyword: "sxtw",
+		name: "Sign Extend Word",
+		description: "Sign extends the 32-bit signed integer in the source general-purpose register to a 64-bit signed integer, and writes the result to the destination general-purpose register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr", reg_size: 64}, name: "Destination register"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 32}, name: "Source register"}],
+		mc_constructor: [
+			["get_bits", ["get_operand_key", 0, :reg_value], 0, 5],
+			["get_bits", ["get_operand_key", 1, :reg_value], 0, 5],
+			["bits", 1,1,1,1,1,0, 0,0,0,0,0,0, 1, 0,1,1,0,0,1, 0,0, 1],
+		],
+		bitsize: 32
+	},
+	{
+		keyword: "sxth",
+		name: "Sign Extend Halfword",
+		description: "Sign extends the 16-bit signed integer in the source general-purpose register to the size of the destination register, and writes the result to the destination general-purpose register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination register"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 32}, name: "Source register"}],
+		mc_constructor: [
+			["get_bits", ["get_operand_key", 0, :reg_value], 0, 5],
+			["get_bits", ["get_operand_key", 1, :reg_value], 0, 5],
+			["bits", 1,1,1,1,0,0, 0,0,0,0,0,0], 
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []],
+			["bits", 0,1,1,0,0,1, 0,0],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []],
+		],
+		bitsize: 32
+	},
+	{
+		keyword: "sxtb",
+		name: "Sign Extend Byte",
+		description: "Sign extends the 8-bit signed integer in the source general-purpose register to the size of the destination register, and writes the result to the destination general-purpose register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination register"}, {type: "register", restrictions: {reg_type: "gpr", reg_size: 32}, name: "Source register"}],
+		mc_constructor: [
+			["get_bits", ["get_operand_key", 0, :reg_value], 0, 5],
+			["get_bits", ["get_operand_key", 1, :reg_value], 0, 5],
+			["bits", 1,1,1,0,0,0, 0,0,0,0,0,0], 
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []],
+			["bits", 0,1,1,0,0,1, 0,0],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], []],
+		],
+		bitsize: 32
+	},
+	
 ]
 
 end # Kompiler::ARMv8A
