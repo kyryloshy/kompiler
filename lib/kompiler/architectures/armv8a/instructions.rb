@@ -13,7 +13,7 @@ end
 	{	keyword: "mov",
 		name: "Move (immediate)",
 		description: "Moves an immediate value to the destination register",
-		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "immediate", restrictions: {}, name: "Immediate value"}],
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination register"}, {type: "immediate", restrictions: {}, name: "Immediate value"}],
 		mc_constructor: [
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
 			["get_bits", ["get_operand", 1], 0, 16],
@@ -25,7 +25,7 @@ end
 	{	keyword: "mov",
 		name: "Move (register)",
 		description: "Copies the value in the source register to the destination register",
-		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source"}],
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination register"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source register"}],
 		mc_constructor: [
 			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "mov Error: Register sizes are not the same"]],
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5], # Rd
@@ -40,7 +40,7 @@ end
 	{	keyword: "mov_sp",
 		name: "Move (to/from SP)",
 		description: "Move between a general-purpose register and the stack pointer.",
-		operands: [{type: "register", restrictions: {reg_type: "gpr"}}, {type: "register", restrictions: {reg_type: "gpr"}}],
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination register"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source register"}],
 		mc_constructor: [
 			# Get the non-SP register
 			["if_eq_else", ["downcase_str", ["get_key", ["get_operand", 0], :reg_name]], "sp", ["set_var", "non_sp_reg", ["get_operand", 1]], ["set_var", "non_sp_reg", ["get_operand", 0]]],
@@ -53,9 +53,9 @@ end
 		bitsize: 32
 	},
 	{	keyword: "mvn", # MVN writes the bitwise opposite of the source register to a destination register
-		name: "Move inverted",
+		name: "Move inverse",
 		description: "Writes the bitwise opposite of the source register value to the destination register.",
-		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source"}],
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination register"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source register"}],
 		mc_constructor: [
 			["ensure_eq", ["get_operand_key", 0, :reg_size], ["get_operand_key", 1, :reg_size], "mvn Error: Register sizes are not the same."],
 
@@ -70,7 +70,9 @@ end
 	},
 	{
 		keyword: "add",
-		operands: [{type: "register", restrictions: {reg_type: "gpr"}}, {type: "register", restrictions: {reg_type: "gpr"}}, {type: "immediate"}],
+		name: "Add (immediate)",
+		description: "Adds the source register value and the immediate value, and writes the result to the destination register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination register"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source register"}, {type: "immediate", name: "Immediate value"}],
 		mc_constructor: [
 			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "add Error: Register sizes are not the same"]],
 
@@ -87,7 +89,7 @@ end
 		keyword: "add",
 		name: "ADD (registers)",
 		description: "Adds two source registers and writes the result to the destination register",
-		operands: [{type: "register", restrictions: {reg_type: "gpr"}}, {type: "register", restrictions: {reg_type: "gpr"}}, {type: "register", restrictions: {reg_type: "gpr"}}],
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination register"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source register 1"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source register 2"}],
 		mc_constructor: [
 			# Make sure register sizes are the same
 			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "add Error: Register sizes are not the same"]],
@@ -107,9 +109,9 @@ end
 	
 	{
 		keyword: "and",
-		name: "And (register)",
+		name: "Bitwise And (register)",
 		description: "Performs a bitwise AND of two register values and writes the result to the destination register.",
-		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Register 1"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Register 2"}],
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination register"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source register 1"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source register 2"}],
 		mc_constructor: [
 			["if_eq_else", ["get_key", ["get_operand", 0], :reg_size], ["get_key", ["get_operand", 1], :reg_size], [], ["raise_error", "and Error: Register sizes are not the same"]],
 			["if_eq_else", ["get_key", ["get_operand", 1], :reg_size], ["get_key", ["get_operand", 2], :reg_size], [], ["raise_error", "and Error: Register sizes are not the same"]],
@@ -127,17 +129,21 @@ end
 	
 	{
 		keyword: "orr", # And between registers, with shift set to zero
-		name: "Or",
+		name: "Bitwise OR (register)",
 		description: "Computes a logical bit-wise OR operation between two registers and writes the result to the destination register.",
-		operands: [{type: "register", restrictions: {reg_size: 64}, name: "Destination"}, {type: "register", restrictions: {reg_size: 64}, name: "Register 1"}, {type: "register", restrictions: {reg_size: 64}, name: "Register 2"}],
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination register"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source register 1"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source register 2"}],
 		mc_constructor: [
+			["ensure_eq", ["get_operand_key", 0, :reg_size], ["get_operand_key", 1, :reg_size], "orr Error: Register sizes are not the same."],
+			
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5],
 			["get_bits", 0, 0, 6], # imm6 (shift amount) set to zero
 			["get_bits", ["encode_gp_register", ["get_operand", 2]], 0, 5],
 			["bits", 0], # N
 			["bits", 0,0], # shift type
-			["bits", 0,1,0,1,0, 1,0, 1],
+			["bits", 0,1,0,1,0, 1,0],
+
+			["case", ["get_operand_key", 0, :reg_size], 32, ["bits", 0], 64, ["bits", 1], ["bits", 0]],
 		],
 		bitsize: 32
 	},
@@ -172,13 +178,17 @@ end
 	},
 	{
 		keyword: "b",
-		operands: [{type: "immediate"}],
+		name: "Branch (immediate)",
+		description: "Branches (jumps) to a PC-relative offset specified by the immediae value.",
+		operands: [{type: "immediate", name: "Immediate PC Offset"}],
 		mc_constructor: [["get_bits", ["get_operand", 0], 0, 26], ["bits", 1,0,1,0,0,0]],
 		bitsize: 32
 	},
 	{
 		keyword: "b",
-		operands: [{type: "label"}],
+		name: "Branch (label)",
+		description: "Branches (jumps) to a label using a PC-relative offset.",
+		operands: [{type: "label", name: "Program label"}],
 		mc_constructor: [
 			["if_eq_else", ["modulo", ["subtract", ["get_label_address", ["get_operand", 0]], ["get_current_address"]], 4], 0, [], ["raise_error", "Can't branch to the address - offset not divisible by 4 bytes."]], # Check if address is accessible
 			["get_bits", ["divide", ["subtract", ["get_label_address", ["get_operand", 0]], ["get_current_address"]], 4], 0, 26],
@@ -188,6 +198,8 @@ end
 	},
 	{
 		keyword: "br",
+		name: "Branch (register)",
+		description: "Branches (jumps) to an address in a register.",
 		operands: [{type: "register", restrictions: {reg_size: 64}}],
 		mc_constructor: [
 			["bits", 0,0,0,0,0],
@@ -198,6 +210,8 @@ end
 	},
 	{
 		keyword: "bl",
+		name: "Branch with link (label)",
+		description: "Branches (jumps) to a label using a PC-relative offset, and sets the register X30 to PC + 4.",
 		operands: [{type: "label"}],
 		mc_constructor: [
 			["if_eq_else", ["modulo", ["subtract", ["get_label_address", ["get_operand", 0]], ["get_current_address"]], 4], 0, [], ["raise_error", "Can't branch to the address - offset not divisible by 4 bytes."]], # Check if address is accessible
