@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
 	EOF
 	s.authors     = ["Kyryl Shyshko"]
 	s.email       = "kyryloshy@gmail.com"
-	s.files       = ["lib/kompiler.rb", "LICENSE"] + Dir["lib/kompiler/*"] + Dir["lib/kompiler/arch_entries/*"] + Dir["lib/kompiler/architectures/armv8a/*"]
+	s.files       = ["lib/kompiler.rb", "LICENSE"] + Dir["lib/kompiler/*"] + Dir["lib/kompiler/arch_entries/*"] + Dir["lib/kompiler/architectures/armv8a/*"] + Dir["lib/kompiler/wrappers/*"]
 	s.executables << "kompile"
 	s.homepage    = "https://github.com/kyryloshy/kompiler"
 	s.license     = "Apache-2.0"

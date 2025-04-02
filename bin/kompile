@@ -16,29 +16,117 @@
 
 require 'kompiler'
 
+
+arg_string = ARGV.join(" ")
+
+arg_words = []
+arg_keys = []
+arg_opts = []
+arg_letters = []
+
+current_i = 0
+
+permitted_word_chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a + ["_", ".", "-"]
+
+whitespace_chars = ["\t", " "]
+
+def get_word string, permitted_word_chars, offset = 0
+	if string[0] == '"'
+		str_content, n_parsed = Kompiler::Parsers.parse_str(string[offset..])
+		return str_content, n_parsed + offset
+	else
+		current_i = offset
+		word = ""
+		while permitted_word_chars.include? string[current_i]
+			word << string[current_i]
+			current_i += 1
+		end
+		return word, current_i
+	end
+end
+
+
+while current_i < arg_string.size
+
+	if whitespace_chars.include? arg_string[current_i]
+		current_i += 1
+	end
+
+	if arg_string[current_i] == "-" && arg_string[current_i + 1] == "-"
+		current_i += 2
+		keyword, current_i = get_word(arg_string, permitted_word_chars, current_i)
+
+
+		if arg_string[current_i] == "="
+			current_i += 1
+			value, current_i = get_word(arg_string, permitted_word_chars, current_i)
+
+			arg_keys << [keyword, value]
+		elsif whitespace_chars.include?(arg_string[current_i]) || current_i == arg_string.size
+			arg_opts << keyword
+		else
+			puts "Unrecognized argument syntax at index #{current_i}"
+			exit
+		end
+
+		next
+	end
+
+	if arg_string[current_i] == "-"
+		current_i += 1
+		
+		letters, current_i = get_word(arg_string, permitted_word_chars, current_i)
+
+		arg_letters += letters.chars
+
+		next
+	end
+	
+	
+	word, current_i = get_word(arg_string, permitted_word_chars, current_i)	
+	arg_words << word
+end
+
+
+
+
 # Print the help screen if requested
-if (ARGV.size == 1) && ["--help", "-h"].include?(ARGV[0])
-puts """Usage: kompile [options] | [<input_file> <output_file> [architecture]]
+if arg_opts.include?("help") || arg_letters.include?("h")
+puts """Usage: kompile <input_file> [<output_file>] [compile_options]
+   or: kompile OPTION
+
+Compile a file:
+ input_file             Path to the input file
+ output_file            Path to the output file (optional, default is out.bin)
+
+Compilation options:
+ --arch=<arch_name>     Compile for the specified architecture (optional, default is armv8a)
+ --wrap=<format>        Wrap the compiled program in the specified format (default is none)
+
+Available wrapping formats:
+ none
+ elf.obj
+ elf.exec
+ mach-o.obj  [not implemented yet]
+ mach-o.exec [not implemented yet]
+
+Additional options for wrapping are:
+ --elf-machine=<type>                 Specifies ELF header's e_machine to be the type provided
+ --mach-o-machine=<cputype.subtype>   Specifies Mach-O header's cputype and subtype
+                                   to be the type provided
 
 Available options:
- --help, -h				Prints this screen
- --list-architectures	Prints available architectures
- -L						Alias to --list-architectures
-
-To compile, run:
- kompile <input_file> <output_file> [architecture]
-
-Arguments:
- <input_file>			The path to the input file
- <output_file>			The path where the compiled output will be saved
- [architecture]			(Optional) One of the installed architectures to use for compilation (defaults to \"armv8a\")
+ --help, -h                 Prints this information
+ --list-architectures       Lists available architectures
+ --list-instructions [arch] Lists available instructions for the specified architecture
+ --list-registers [arch]    Lists available registers for the specified architecture
 """
 exit # Exit
 end
 
 
 # Print the available architectures if requested
-if (ARGV.size == 1) && ["--list-architectures", "-L"].include?(ARGV[0])
+if arg_opts == ["list-architectures"]
 	Kompiler::ArchManager.load_all_entries()
 	puts "Available architectures:"
 	
@@ -48,8 +136,8 @@ if (ARGV.size == 1) && ["--list-architectures", "-L"].include?(ARGV[0])
 	exit # Exit
 end
 
-if ["--list-instructions"].include?(ARGV[0]) && [1,2].include?(ARGV.size)
-	arch_name = ARGV[1] || "armv8a"
+if arg_opts == ["list-instructions"]
+	arch_name = arg_words[0] || "armv8a"
 	Kompiler::ArchManager.load_all_entries()
 	arch = Kompiler::ArchManager.get_arch(arch_name)
 
@@ -64,8 +152,8 @@ if ["--list-instructions"].include?(ARGV[0]) && [1,2].include?(ARGV.size)
 	exit
 end
 
-if ["--list-registers"].include?(ARGV[0]) && [1,2].include?(ARGV.size)
-	arch_name = ARGV[1] || "armv8a"
+if arg_opts == ["list-registers"]
+	arch_name = arg_words[0] || "armv8a"
 	Kompiler::ArchManager.load_all_entries()
 	arch = Kompiler::ArchManager.get_arch(arch_name)
 
@@ -80,52 +168,129 @@ end
 
 
 
-in_filename = ARGV[0]
-out_filename = ARGV[1]
-arch_name = ARGV[2] || "armv8a"
+if arg_words.size < 1
+	puts "kompile: No input file path provided."
+	puts "Type \"kompile --help\" for more information."
+	exit
+end
+
+in_filename = arg_words[0]
+out_filename = (arg_words.size > 1) ? arg_words[1] : "out.bin"
+
 
 if !in_filename
 	puts "Error: No input file provided"
 	exit
 end
 
+if !File.exist?(in_filename)
+	puts "Error: File \"#{in_filename}\" doesn't exist"
+	exit
+end
+
+
 if !out_filename
 	puts "Error: No output file provided"
 	exit
 end
 
-if !File.exist?(in_filename)
-	puts "Error: #{in_filename} doesn't exist"
+
+
+
+
+wrap_opt = arg_keys.select{_1[0] == "wrap"}
+
+
+if wrap_opt.size > 1
+	puts "kompile: Only one wrapping option can be provided with \"--wrap\"."
+	puts "Type \"kompile --help\" for more information."
 	exit
+elsif wrap_opt.size == 1
+	wrap_opt = wrap_opt[0][1]
+else
+	wrap_opt = "none"
+end
+
+
+if !["elf.obj", "elf.exec", "mach-o.obj", "mach-o.exec", "none"].include?(wrap_opt)
+	puts "kompile: Unknown wrapping option \"#{wrap_opt}\"."
+	puts "Type \"kompile --help\" for more information."
+	exit
+end
+
+
+
+
+arch_opt = arg_keys.select{_1[0] == "arch"}
+
+if arch_opt.size > 1
+	puts "kompile: Only one architecture can be provided with \"--arch\"."
+	puts "Type \"kompile --help\" for more information."
+	exit
+elsif arch_opt.size == 1
+	arch_name = arch_opt[0][1]
+else
+	arch_name = "armv8a"
 end
 
 # Load all the architecture entries
 
 Kompiler::ArchManager.load_all_entries()
 
-# Find the right architecture
-arch = Kompiler::ArchManager.get_arch(arch_name)
-
-if arch == nil
-	puts "Error: Architecture \"#{arch_name}\" not found."
-	exit
-end
-
-# Get the include path for the architecture
-arch_include_path = arch[:include_path]
-
 # Load the architecture
-begin
-	require arch_include_path
-rescue LoadError => e
-	puts "Error: Could not load #{arch_name} architecture's configuration."
+
+arch_config = Kompiler::ArchManager.get_arch(arch_name)
+
+if arch_config == nil
+	puts "kompile: Could not find the architecture \"#{arch_name}\"."
+	puts "Type \"kompile --list-architectures\" for the list of known architectures."
 	exit
 end
 
-code = File.read(in_filename)
-
-compiled_bytes_str = Kompiler::CompilerFunctions.compile(code, [in_filename])
-
-File.open(out_filename, "wb") do |file|
-	file.write compiled_bytes_str
+begin
+	Kompiler::ArchManager.load_arch(arch_name)
+rescue
+	puts "kompile: Could not load the architecture \"#{arch_name}\"."
+	exit
 end
+
+
+
+code = File.binread(in_filename)
+
+detailed_out = Kompiler::CompilerFunctions.detailed_compile(code)
+
+# p detailed_out
+
+out = nil
+
+code = detailed_out[:machine_code]
+labels = detailed_out[:labels]
+
+labels.delete "here"
+
+
+case wrap_opt
+when "none"
+	out = code
+when "elf.obj"
+	elf_machine = arg_keys.filter{_1[0] == "elf-machine"}[0]
+	elf_machine = elf_machine[1].to_i if elf_machine
+	symbols = Kompiler::Wrappers::ELF.labels_to_symbols(labels)
+	out = Kompiler::Wrappers::ELF.wrap_obj(code, symbols, machine: elf_machine)
+when "elf.exec"
+	elf_machine = arg_keys.filter{_1[0] == "elf-machine"}[0]
+	elf_machine = elf_machine[1].to_i if elf_machine
+	symbols = Kompiler::Wrappers::ELF.labels_to_symbols(labels)
+	out = Kompiler::Wrappers::ELF.wrap_exec(code, symbols, machine: elf_machine)
+when "mach-o.obj"
+	puts "Mach-O not yet implemented."
+	exit
+when "mach-o.exec"
+	puts "Mach-O not yet implemented."
+	exit
+end
+
+
+File.binwrite out_filename, out
+
