@@ -1,6 +1,37 @@
 # Copyright 2024 Kyrylo Shyshko
 # Licensed under the Apache License, Version 2.0. See LICENSE file for details.
 
+#
+# Implements a custom AST structure and interpreter for instructions on how to build the instruction's machine code (MC).
+#
+# @MC_AST_NODES contains a list of all available instructions / AST nodes for building machine code.
+# Each entry's structure is:
+#  name - contains the node's / instruction's name
+#  n_args - either an integer or "any". Contains the amount of arguments this instruction must receive.
+#  func - a lambda receiving the arguments and the current program's state as inputs. Should output the instruction's result.
+#  eval_args - optional, default true. Specifies whether to pre-evaluate the node's arguments.
+#
+# A MC instruction example:
+# ["get_bits", ["get_current_address"], 0, 10]
+# Which returns an array of ten integers, or bits, of the current address.
+# 
+# Each MC instruction is in the form of an array with a string, the instruction's name, as the first element.
+# All other elements will count as arguments.
+# For most nodes, the arguments will be evaluated / computed before calling the node's logic. For example, in:
+# ["get_bits", ["get_current_address"], 0, 10]
+# ["get_current_address"] will be evaluted first, and then the result will be passed into get_bits. This is similar to a Ruby piece of code like this:
+# get_bits(get_current_address(), 0, 10)
+#
+# In more special nodes that have eval_args = false, such as the if_eq_else node, the arguments aren't pre-evaluated, which is required in an if-statement scenario. E.g., an error shouldn't be thrown before a check that the error must be raised.
+#
+#
+# Main functions are:
+#  build_mc - builds machine code from an input AST
+#  run_mc_ast - runs an MC AST node
+#  is_ast_node - returns if an object is an AST node, by checking whether it is an array with the first element being a string
+#
+
+
 module Kompiler
 
 module MachineCode_AST

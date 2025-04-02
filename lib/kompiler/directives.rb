@@ -1,6 +1,19 @@
 # Copyright 2024 Kyrylo Shyshko
 # Licensed under the Apache License, Version 2.0. See LICENSE file for details.
 
+#
+# Implements all directives available in programs.
+#
+# Kompiler::Directives.directives is a list of all available directives.
+#
+# An entry's structure is:
+#  keyword - string or list of strings specifying the keywords by which the directive can be accessed.
+#  func - a Ruby lambda that receives the call operands and current state as arguments, and outputs the new state.
+#  collect_operands - optional (default is true). Specifies whether the operands should be parsed before calling the :func key lambda.
+#                     If false, operands will be a raw string containing the string after the keyword.
+#
+
+
 module Kompiler
 
 module Directives

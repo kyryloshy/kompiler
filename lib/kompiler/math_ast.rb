@@ -1,3 +1,31 @@
+
+#
+# Implements logic to parse math-like expressions into an ASTs.
+#
+# Main functions:
+#  str_to_ast - converts a raw string into an AST.
+#  run_ast - runs the AST created by str_to_ast.
+#
+# Config options are available in Kompiler::Parsers::SymAST::Config :
+#  word_begin_chars - a list of characters that a word can begin with
+#  word_chars - a list of characters that a word can contain
+#  number_begin_chars - a list of characters that a number can begin with
+#  number_chars - a list of characters that a number can contain
+#  whitespace_chars - a list of whitespace / separator characters
+#  parse_functions - a boolean specifying whether functions with syntax func(x + 2) should be parsed or throw an error
+#  sign_types - a list of available signs, their names and character sequences that qualify as the sign.
+#               Entries appearing earlier in the list are prioritized.
+#  one_element_ast_operations - a list of one element operations, their names, sign types, and checking direction (1 for left to right, -1 for right to left).
+#                               For example, the negation "-x" is a one element operation, with the sign type "sub", and check_direction -1 (checks from right to left) because it is on the left of the 'x'
+#                               Entries appearing earlier in the list are prioritized.
+#  two_element_ast_operations - a list of two element operation 'groups'. Groups are implemented to list operations on the same priority level with the same check direction.
+#                               Each group has a check_direction (1 for left to right, -1 for opposite), and a list of operations in this group, their names and sign types, similar to one element operations.
+#                               Entries appearing earlier in the list are prioritized.
+#                               An example group could be multiplication and division. The check_direction will be 1, and there will be two operations (mul and div). This group will be below the power (a ** b) group.
+#  functions - a list of available functions in expressions in Kompiler programs
+#
+
+
 module Kompiler
 
 module Parsers

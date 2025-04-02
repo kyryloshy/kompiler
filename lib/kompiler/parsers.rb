@@ -1,6 +1,27 @@
 # Copyright 2024 Kyrylo Shyshko
 # Licensed under the Apache License, Version 2.0. See LICENSE file for details.
 
+#
+# Implements generic parsers used everywhere and checks specific to the compilation process
+# 
+# Functions:
+#  parse_str - parses a string definition from the input text, and returns the amount of characters parsed and the string's contents
+#  get_code_lines - parses the initial raw code text into lines, removing comments along the way
+#  
+# Compilation specific functions:
+#  check_instruction - checks whether a line is a valid instruction with the current architecture (Kompiler::Architecture)
+#  check_directive - checks whether a line is a directive call
+#  
+#  parse_instruction_line - parses an instruction line into its keyword (string) and operands with their descriptions (e.g., type of operand, content, value)
+#  extract_instruction_parts - parses an instruction line into a string keyword and a list of operand definitions (used by parse_instruction_line)
+#  extract_instruction_operands - parses the string after the keyword to extract only the operand definitions (used by extract_instruction_parts)
+#  parse_operand_str - parses an operand definition (raw string) into its type, value, and other type-dependent information (uses check_register_operand, check_immediate_operand, check_expression_operand, check_label_operand)
+#  check_operand_match - checks whether an operand's info (returned by parse_operand_str) matches the input operand description. Operand descriptions are mostly stored in instruction files (e.g., lib/kompiler/architectures/armv8a/instructions.rb) in the :operands key
+#  match_parsed_line_to_instruction - checks whether a parsed instruction line (keyword + operand info) matches an instruction entry, mostly stored in instruction files (example one line above) (used by check_instruction)
+#
+#
+
+
 module Kompiler
 
 module Parsers

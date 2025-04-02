@@ -1,6 +1,16 @@
 # Copyright 2024 Kyrylo Shyshko
 # Licensed under the Apache License, Version 2.0. See LICENSE file for details.
 
+#
+# Implements main logic happening during compilation.
+# Main functions:
+#  parse_code - main code parser that turns all lines into an abstract structure (determining types of lines and connecting them into a program)
+#  construct_program_mc - transforms the parse_code's AST into machine code (MC)
+#  detailed_compile - stitches parse_code and construct_program_mc to fully compile a program with a detailed output
+#  compile - calls detailed_compile and removes the extra output information
+#
+
+
 module Kompiler
 
 module CompilerFunctions
@@ -138,8 +148,11 @@ def self.parse_code(lines)
 		
 		parsed_lines = state[:parsed_lines] + parsed_lines[insert_i..]
 	end
-	
-	parsed_lines
+
+
+	state = {parsed_lines: parsed_lines, current_address: instr_adr, lines: lines, line_i: line_i, extra_state: extra_state}
+
+	return state
 end
 
 
@@ -204,7 +217,7 @@ def self.construct_program_mc(parsed_lines, labels)
 			end
 		end
 	end
-	
+
 	lines_bytes
 end
 
@@ -250,15 +263,26 @@ def self.bit_lines_to_bytes(bit_lines)
 end
 
 
-def self.compile(code, included_files=[])
+def self.compile(code)
+	detailed_result = detailed_compile(code)
 
+	return detailed_result[:machine_code]
+end
+
+def self.detailed_compile(code)
 	lines = Kompiler::Parsers.get_code_lines(code)
-	
-	parsed_lines = parse_code(lines)
-	
+
+	parsed_state = parse_code(lines)
+
+	# pp parsed_state
+
+	parsed_lines = parsed_state[:parsed_lines]
+
 	labels = get_labels(parsed_lines)
-	
+
 	machine_code_bytes = construct_program_mc(parsed_lines, labels)
+
+	return {machine_code: machine_code_bytes, labels: labels, parsed_state: parsed_state}
 end
 
 
