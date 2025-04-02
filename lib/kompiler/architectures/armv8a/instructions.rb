@@ -53,26 +53,18 @@ end
 		bitsize: 32
 	},
 	{	keyword: "mvn", # MVN writes the bitwise opposite of the source register to a destination register
-		description: "MVN writes the bitwise opposite of the source register to the destination register",
-		operands: [{type: "register", restrictions: {reg_size: 64}, name: "Destination"}, {type: "register", restrictions: {reg_size: 64}, name: "Source"}],
+		name: "Move inverted",
+		description: "Writes the bitwise opposite of the source register value to the destination register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source"}],
 		mc_constructor: [
+			["ensure_eq", ["get_operand_key", 0, :reg_size], ["get_operand_key", 1, :reg_size], "mvn Error: Register sizes are not the same."],
+
 			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5], # Rd
 			["bits", 1,1,1,1,1], # Rn
 			["bits", 0,0,0,0,0,0], # imm6 (shift amount) set to zero
 			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5], # Rm
-			["bits", 1, 0,0, 0,1,0,1,0,1,0, 1] # N - shift type (zero / LSL) - bits
-		],
-		bitsize: 32
-	},
-	{	keyword: "mvn", # MVN writes the bitwise opposite of the source register to a destination register
-		description: "MVN writes the bitwise opposite of the source register to the destination register",
-		operands: [{type: "register", restrictions: {reg_size: 32}, name: "Destination"}, {type: "register", restrictions: {reg_size: 32}, name: "Source"}],
-		mc_constructor: [
-			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5], # Rd
-			["bits", 1,1,1,1,1], # Rn
-			["bits", 0,0,0,0,0,0], # imm6 (shift amount) set to zero
-			["get_bits", ["encode_gp_register", ["get_operand", 1]], 0, 5], # Rm
-			["bits", 1, 0,0, 0,1,0,1,0,1,0, 0] # N - shift type (zero / LSL) - bits
+			["bits", 1, 0,0, 0,1,0,1,0,1,0], # N - shift type (zero / LSL) - bits
+			["case", ["get_operand_key", 0, :reg_size], 32, ["bits", 0], 64, ["bits", 1], [0]]
 		],
 		bitsize: 32
 	},

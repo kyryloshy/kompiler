@@ -111,9 +111,9 @@ Available wrapping formats:
  mach-o.exec [not implemented yet]
 
 Additional options for wrapping are:
- --elf-machine=<type>                 Specifies ELF header's e_machine to be the type provided
+ --elf-machine=<type>                 Specifies ELF header's e_machine to be the type provided (default is 0)
  --mach-o-machine=<cputype.subtype>   Specifies Mach-O header's cputype and subtype
-                                   to be the type provided
+                                      to be the type provided
 
 Available options:
  --help, -h                 Prints this information
@@ -275,12 +275,12 @@ when "none"
 	out = code
 when "elf.obj"
 	elf_machine = arg_keys.filter{_1[0] == "elf-machine"}[0]
-	elf_machine = elf_machine[1].to_i if elf_machine
+	elf_machine = (elf_machine != nil) ? elf_machine[1].to_i : 0
 	symbols = Kompiler::Wrappers::ELF.labels_to_symbols(labels)
 	out = Kompiler::Wrappers::ELF.wrap_obj(code, symbols, machine: elf_machine)
 when "elf.exec"
 	elf_machine = arg_keys.filter{_1[0] == "elf-machine"}[0]
-	elf_machine = elf_machine[1].to_i if elf_machine
+	elf_machine = (elf_machine != nil) ? elf_machine[1].to_i : 0
 	symbols = Kompiler::Wrappers::ELF.labels_to_symbols(labels)
 	out = Kompiler::Wrappers::ELF.wrap_exec(code, symbols, machine: elf_machine)
 when "mach-o.obj"
