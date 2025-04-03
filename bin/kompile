@@ -112,6 +112,7 @@ Available wrapping formats:
 
 Additional options for wrapping are:
  --elf-machine=<type>                 Specifies ELF header's e_machine to be the type provided (default is 0)
+ --elf-class=<class>                  Specifies the ELF file's class to either 32 or 64 (default is 64)
  --mach-o-machine=<cputype.subtype>   Specifies Mach-O header's cputype and subtype
                                       to be the type provided
 
@@ -276,13 +277,23 @@ when "none"
 when "elf.obj"
 	elf_machine = arg_keys.filter{_1[0] == "elf-machine"}[0]
 	elf_machine = (elf_machine != nil) ? elf_machine[1].to_i : 0
+	
+	elf_class = arg_keys.filter{_1[0] == "elf-class"}[0]
+	elf_class ||= ["elf-class", "64"]
+	elf_class = elf_class[1].to_i
+	
 	symbols = Kompiler::Wrappers::ELF.labels_to_symbols(labels)
-	out = Kompiler::Wrappers::ELF.wrap_obj(code, symbols, machine: elf_machine)
+	out = Kompiler::Wrappers::ELF.wrap_obj(code, symbols, machine: elf_machine, elf_class: elf_class)
 when "elf.exec"
 	elf_machine = arg_keys.filter{_1[0] == "elf-machine"}[0]
 	elf_machine = (elf_machine != nil) ? elf_machine[1].to_i : 0
+
+	elf_class = arg_keys.filter{_1[0] == "elf-class"}[0]
+	elf_class ||= ["elf-class", "64"]
+	elf_class = elf_class[1].to_i
+
 	symbols = Kompiler::Wrappers::ELF.labels_to_symbols(labels)
-	out = Kompiler::Wrappers::ELF.wrap_exec(code, symbols, machine: elf_machine)
+	out = Kompiler::Wrappers::ELF.wrap_exec(code, symbols, machine: elf_machine, elf_class: elf_class)
 when "mach-o.obj"
 	puts "Mach-O not yet implemented."
 	exit
