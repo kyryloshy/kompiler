@@ -107,7 +107,7 @@ Available wrapping formats:
  none
  elf.obj
  elf.exec
- mach-o.obj  [not implemented yet]
+ mach-o.obj
  mach-o.exec [not implemented yet]
 
 Additional options for wrapping are:
@@ -115,6 +115,7 @@ Additional options for wrapping are:
  --elf-class=<class>                  Specifies the ELF file's class to either 32 or 64 (default is 64)
  --mach-o-machine=<cputype.subtype>   Specifies Mach-O header's cputype and subtype
                                       to be the type provided
+ --mach-o-archtype=<type>             Specifies the file architecture type to either 32 or 64 (default is 64)
 
 Available options:
  --help, -h                 Prints this information
@@ -261,7 +262,7 @@ code = File.binread(in_filename)
 
 detailed_out = Kompiler::CompilerFunctions.detailed_compile(code)
 
-# p detailed_out
+# pp detailed_out
 
 out = nil
 
@@ -295,10 +296,17 @@ when "elf.exec"
 	symbols = Kompiler::Wrappers::ELF.labels_to_symbols(labels)
 	out = Kompiler::Wrappers::ELF.wrap_exec(code, symbols, machine: elf_machine, elf_class: elf_class)
 when "mach-o.obj"
-	puts "Mach-O not yet implemented."
-	exit
+	macho_cpu = arg_keys.filter{_1[0] == "mach-o-machine"}[0]
+	macho_cpu = (macho_cpu != nil) ? macho_cpu[1] : "0.0"
+	cputype, cpusubtype = macho_cpu.split(".").map(&:to_i)
+
+	arch_type = arg_keys.filter{_1[0] == "mach-o-archtype"}[0]
+	arch_type = (arch_type != nil) ? arch_type[1].to_i : 64
+
+	symbols = Kompiler::Wrappers::MachO.labels_to_symbols(labels)
+	out = Kompiler::Wrappers::MachO.wrap_obj(code, symbols, cputype: cputype, cpusubtype: cpusubtype, arch_type: arch_type)
 when "mach-o.exec"
-	puts "Mach-O not yet implemented."
+	puts "Mach-O executable not yet implemented."
 	exit
 end
 
