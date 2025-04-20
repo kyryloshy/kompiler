@@ -30,7 +30,12 @@ The currently supported directives in Kompiler are:
  - **ascii** string: Inserts the given string encoded in ascii into the program's machine code.
  - **set_pc** address: Sets the PC to the specified address. For example, useful in a Raspberry Pi, where the kernel is loaded at 0x80000
  - **insert_file** filename: Inserts the contents of the given file into the program's machine code. Useful for embedding large data, such as an image
- 
- 
+ - **load** or **include** filename: Loads the given file as code at the current location. See [Part 5: Includes](/docs/basics/05_includes.md)
+ - **load_end** or **include_end** filename: Loads the given file as code at the end of the current file. See [Part 5: Includes](/docs/basics/05_includes.md)
+ - **value** value_name, value: Associates a value (or any piece of text) with a name. After the definition can be used as an 'alias' to the input value by its name.
+ - **macro** macro_name args: Creates a macro that can be used to embed a piece of code at different locations with the dynamic arguments.
+ - **isomacro** macro_name args: Similar to .macro, but embeds each call in an isolated namespace, so that labels and other definitions aren't accessible outside the call.
+ - **namespace** name ... **endnamespace**: Isolates a piece of code between .namespace and .endnamespace in a namespace with the given name. Basically, all labels, values, and macros will be accessible as "namespace name".item_name outside the namespace. 
+ - **info** info_name, data: Creates an information entry with the given data, marking current state and other information. Created for future use
  
 [Previous](/docs/basics/03_labels.md) [Next](/docs/basics/05_includes.md)
