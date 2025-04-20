@@ -77,10 +77,10 @@ module Kompiler
 		
 
 		# Converts a label hash of name-address pairs into an array of symbols
-		def self.labels_to_symbols labels
+		def self.labels_to_symbols labels, vaddr: 0
 			out = []
 			labels.each do |name, value|
-				out << {name: name, value: value, type: 0, binding: 0}
+				out << {name: name, value: value + vaddr, type: 0, binding: 0}
 			end
 			out
 		end

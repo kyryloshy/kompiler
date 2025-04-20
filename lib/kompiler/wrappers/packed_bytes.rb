@@ -1,6 +1,20 @@
 class PackedBytes
-	def initialize bytes = ""
+	# endianess can be :le or :be
+	def initialize bytes = "", endianess: :le 
 		@bytes = bytes.dup
+		self.endianess = endianess
+	end
+
+	def endianess= new_endianess
+		case new_endianess
+		when :le
+			@pack_endianess_string = "<"
+		when :be
+			@pack_endianess_string = ">"			
+		else
+			raise "Unknown endianess configuration \"#{new_endianess}\". Must be :le or :be"
+		end
+		@endianess = new_endianess
 	end
 	
 	def uint8 n
@@ -10,17 +24,17 @@ class PackedBytes
 	
 	def uint16 n
 		n = [n] if n.is_a? Numeric
-		@bytes << n.pack("S<*")
+		@bytes << n.pack("S#{@pack_endianess_string}*")
 	end
 	
 	def uint32 n
 		n = [n] if n.is_a? Numeric
-		@bytes << n.pack("L<*")
+		@bytes << n.pack("L#{@pack_endianess_string}*")
 	end
 	
 	def uint64 n
 		n = [n] if n.is_a? Numeric
-		@bytes << n.pack("Q<*")
+		@bytes << n.pack("Q#{@pack_endianess_string}*")
 	end
 	
 	def bytes bytes, n_bytes=nil

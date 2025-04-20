@@ -15,7 +15,7 @@
 # limitations under the License.
 
 require 'kompiler'
-
+require 'fileutils'
 
 arg_string = ARGV.join(" ")
 
@@ -108,20 +108,27 @@ Available wrapping formats:
  elf.obj
  elf.exec
  mach-o.obj
- mach-o.exec [not implemented yet]
-
+ mach-o.exec
+ 
 Additional options for wrapping are:
  --elf-machine=<type>                 Specifies ELF header's e_machine to be the type provided (default is 0)
  --elf-class=<class>                  Specifies the ELF file's class to either 32 or 64 (default is 64)
  --mach-o-machine=<cputype.subtype>   Specifies Mach-O header's cputype and subtype
                                       to be the type provided
  --mach-o-archtype=<type>             Specifies the file architecture type to either 32 or 64 (default is 64)
+ --exec-type=<type>                   Used with --wrap=mach-o.exec. Specifies whether the executable is
+                                      statically (static) or dynamically (dylink) linked (default is dylink)
+ --mach-o-threadstate=<type>          Used with --wrap=mach-o.exec and --exec-type=static. Specifies which
+                                      thread state type to use (arm64, arm32, x86-64 or x86-32)
+ --codesign=<bool>                    Used with --wrap=mach-o.*. Specifies whether to add a basic
+                                      code signature to the Mach-O file (default is false)
 
 Available options:
  --help, -h                 Prints this information
  --list-architectures       Lists available architectures
  --list-instructions [arch] Lists available instructions for the specified architecture
  --list-registers [arch]    Lists available registers for the specified architecture
+ --list-lexis               Lists available lexis entries
 """
 exit # Exit
 end
@@ -141,14 +148,18 @@ end
 if arg_opts == ["list-instructions"]
 	arch_name = arg_words[0] || "armv8a"
 	Kompiler::ArchManager.load_all_entries()
-	arch = Kompiler::ArchManager.get_arch(arch_name)
+	Kompiler::ArchManager.load_arch arch_name
 
-	require arch[:include_path]
+	Kompiler::Architecture.instructions.each do |instruction|
+		print instruction[:keyword]
 
-	Kompiler::Architecture.instructions.each do |instr|
-		puts "#{instr[:keyword]} (#{instr[:operands].size} operands): #{instr[:name]}"
-		puts instr[:description]
-		puts
+		print " "
+
+		puts instruction[:operands].map{"<" + (_1[:name] || _1[:type] || "") + ">"}.join(" ")
+
+		puts instruction[:description]
+
+		print "\n"
 	end
 
 	exit
@@ -235,6 +246,7 @@ else
 	arch_name = "armv8a"
 end
 
+
 # Load all the architecture entries
 
 Kompiler::ArchManager.load_all_entries()
@@ -272,44 +284,139 @@ labels = detailed_out[:labels]
 labels.delete "here"
 
 
+def get_number str
+	bool, val = Kompiler::Parsers.check_immediate_operand(str)
+	return (bool == false) ? nil : val
+end
+
+
+def get_arg_key arg_keys, key, default_value=0
+	filtered = arg_keys.filter{_1[0] == key}[0]
+	value = (filtered != nil) ? filtered[1] : default_value
+	return value
+end
+
+
+class String
+	def to_num
+		status, val = Kompiler::Parsers.check_immediate_operand(self)
+		return (status == false) ? nil : val[:value]
+	end
+end
+
+
+add_exec_permission = false
+
+
 case wrap_opt
 when "none"
 	out = code
 when "elf.obj"
-	elf_machine = arg_keys.filter{_1[0] == "elf-machine"}[0]
-	elf_machine = (elf_machine != nil) ? elf_machine[1].to_i : 0
-	
-	elf_class = arg_keys.filter{_1[0] == "elf-class"}[0]
-	elf_class ||= ["elf-class", "64"]
-	elf_class = elf_class[1].to_i
+	elf_machine = get_arg_key(arg_keys, "elf-machine", "0").to_num
+	elf_class = get_arg_key(arg_keys, "elf-class", "64").to_num
+
+	if ![32, 64].include?(elf_class)
+		puts "kompile: Invalid ELF class specified."
+		puts "Type \"kompile --help\" for more information."
+		exit
+	end
 	
 	symbols = Kompiler::Wrappers::ELF.labels_to_symbols(labels)
 	out = Kompiler::Wrappers::ELF.wrap_obj(code, symbols, machine: elf_machine, elf_class: elf_class)
 when "elf.exec"
-	elf_machine = arg_keys.filter{_1[0] == "elf-machine"}[0]
-	elf_machine = (elf_machine != nil) ? elf_machine[1].to_i : 0
+	vaddr = 0x80000
 
-	elf_class = arg_keys.filter{_1[0] == "elf-class"}[0]
-	elf_class ||= ["elf-class", "64"]
-	elf_class = elf_class[1].to_i
+	elf_machine = get_arg_key(arg_keys, "elf-machine", "0").to_num
+	elf_class = get_arg_key(arg_keys, "elf-class", "64").to_num
 
-	symbols = Kompiler::Wrappers::ELF.labels_to_symbols(labels)
-	out = Kompiler::Wrappers::ELF.wrap_exec(code, symbols, machine: elf_machine, elf_class: elf_class)
+	if ![32, 64].include?(elf_class)
+		puts "kompile: Invalid ELF class specified."
+		puts "Type \"kompile --help\" for more information."
+		exit
+	end
+
+
+	symbols = Kompiler::Wrappers::ELF.labels_to_symbols(labels, vaddr: vaddr)
+	out = Kompiler::Wrappers::ELF.wrap_exec(code, symbols, machine: elf_machine, elf_class: elf_class, vaddr: vaddr)
+	
+	add_exec_permission = true
+	
 when "mach-o.obj"
-	macho_cpu = arg_keys.filter{_1[0] == "mach-o-machine"}[0]
-	macho_cpu = (macho_cpu != nil) ? macho_cpu[1] : "0.0"
-	cputype, cpusubtype = macho_cpu.split(".").map(&:to_i)
+	macho_cpu = get_arg_key(arg_keys, "mach-o-machine", "0.0")
+	cputype, cpusubtype = macho_cpu.split(".").map(&:to_num)
 
-	arch_type = arg_keys.filter{_1[0] == "mach-o-archtype"}[0]
-	arch_type = (arch_type != nil) ? arch_type[1].to_i : 64
+	if [cputype, cpusubtype].include? nil
+		puts "kompile: Invalid Mach-O machine specified."
+		puts "Type \"kompile --help\" for more information."
+		exit
+	end
+
+	arch_type = get_arg_key(arg_keys, "mach-o-archtype", "64").to_num
+
+	codesign = get_arg_key(arg_keys, "codesign", "false")
+	if !["true", "false"].include?(codesign)
+		puts "kompile: Invalid --codesign value."
+		puts "Type \"kompile --help\" for more information."
+		exit
+	end
+
+	codesign = (codesign == "true")
 
 	symbols = Kompiler::Wrappers::MachO.labels_to_symbols(labels)
 	out = Kompiler::Wrappers::MachO.wrap_obj(code, symbols, cputype: cputype, cpusubtype: cpusubtype, arch_type: arch_type)
 when "mach-o.exec"
-	puts "Mach-O executable not yet implemented."
-	exit
+	macho_cpu = get_arg_key(arg_keys, "mach-o-machine", "0.0")
+	cputype, cpusubtype = macho_cpu.split(".").map(&:to_num)
+
+	if [cputype, cpusubtype].include? nil
+		puts "kompile: Invalid Mach-O machine specified."
+		puts "Type \"kompile --help\" for more information."
+		exit
+	end
+
+	arch_type = get_arg_key(arg_keys, "mach-o-archtype", "64").to_num
+
+	exec_type = get_arg_key(arg_keys, "exec-type", "dylink")
+
+
+	codesign = get_arg_key(arg_keys, "codesign", "false")
+	if !["true", "false"].include?(codesign)
+		puts "kompile: Invalid --codesign value."
+		puts "Type \"kompile --help\" for more information."
+		exit
+	end
+
+	codesign = (codesign == "true")
+
+
+	case exec_type
+	when "dylink"
+		symbols = Kompiler::Wrappers::MachO.labels_to_symbols(labels)
+		out = Kompiler::Wrappers::MachO.wrap_exec_dylink(code, symbols, cputype: cputype, cpusubtype: cpusubtype, arch_type: arch_type, codesign: codesign)
+	when "static"
+		symbols = Kompiler::Wrappers::MachO.labels_to_symbols(labels)
+
+		thread_state_arch = get_arg_key(arg_keys, "mach-o-threadstate", "arm64")
+
+		entry_address = 0x1000000
+
+		thread_state = Kompiler::Wrappers::MachO.build_thread_state arch: thread_state_arch, entry_address: 0x1000000, stack_pointer: 0
+		
+		out = Kompiler::Wrappers::MachO.wrap_exec_static(code, symbols, cputype: cputype, cpusubtype: cpusubtype, arch_type: arch_type, thread_state: thread_state, codesign: codesign, virtual_entry_address: entry_address)
+
+	else
+		puts "kompile: Invalid Mach-O executable type specified."
+		puts "Type \"kompile --help\" for more information."
+		exit
+	end
+	
+	add_exec_permission = true
 end
 
 
 File.binwrite out_filename, out
+
+if add_exec_permission
+	FileUtils.chmod "+x", out_filename
+end
 
