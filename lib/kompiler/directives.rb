@@ -13,6 +13,8 @@
 #                     If false, operands will be a raw string containing the string after the keyword.
 #
 
+require 'securerandom'
+
 
 module Kompiler
 
@@ -250,7 +252,7 @@ end
 			state[:line_i] += 1
 
 			# Insert the lines at the correct place
-			state[:lines] = state[:lines][0...state[:line_i]] + total_load_lines + state[:lines][state[:line_i]..]
+			state[:lines] = state[:lines][0...state[:line_i]] + total_load_lines + state[:lines][state[:line_i]..]		
 
 			state
 		end
@@ -415,7 +417,7 @@ end
 					end
 					
 					# Skip string definitions
-					if ['"', "'"].include? line[start_i]
+					if Kompiler::Config.string_delimiters.include? line[start_i]
 						str, parsed_length = Kompiler::Parsers.parse_str line[start_i..]
 						start_i += parsed_length
 						next
@@ -515,10 +517,393 @@ end
 				line_i += build_lines.size
 			end			
 			
-			state[:lines] = state[:lines][...state[:line_i]] + scan_lines
+			state[:lines] = state[:lines][...(state[:line_i] + def_lines.size + 2)] + scan_lines
 			
+			state[:line_i] += def_lines.size + 2
+				
+			state
+		end
+	},
+	{
+		keyword: "isomacro",
+		collect_operands: false,
+		func: lambda do |_, state|
+			line_i = state[:line_i]
+			
+			def_line = state[:lines][line_i]
+			
+			# First: collect the part after ".macro"
+			
+			char_i = 0
+			# Skip the whitespace before .macro
+			while char_i < def_line.size && Kompiler::Config.whitespace_chars.include?(def_line[char_i])
+				char_i += 1
+			end
+			# Skip the .macro
+			while char_i < def_line.size && Kompiler::Config.keyword_chars.include?(def_line[char_i])
+				char_i += 1
+			end
+			# Skip the whitespace after .macro
+			while char_i < def_line.size && Kompiler::Config.whitespace_chars.include?(def_line[char_i])
+				char_i += 1
+			end
+			
+			# If the end of the line was reached, throw an error
+			raise "Incorrect .isomacro definition" if char_i == def_line.size
+			
+			# Now char_i contains the first index of the text after .macro
+			
+			macro_def = def_line[char_i..]
+			
+			# Second: extract the macro's name
+			
+			macro_name = ""			
+			
+			while char_i < def_line.size && Kompiler::Config.keyword_chars.include?(def_line[char_i])
+				macro_name << def_line[char_i]
+				char_i += 1
+			end
+			
+			# Third: extract the operand names (code taken from parse_instruction_line in parsers.rb)
+			
+			arg_names = Kompiler::Parsers.extract_instruction_operands(def_line[char_i..])
+			
+			# Make sure that the arg names are unique
+			raise "Macro definition error - arguments cannot have the same name: Program build not possible" if arg_names.size != arg_names.uniq.size
+			
+			# Extract the macro inside definition
+			
+			line_i = state[:line_i] + 1
+			def_lines = []
+			
+			whitespace_regexp = /[#{Kompiler::Config.whitespace_chars.join("|")}]*/
+			
+			endmacro_regexp = /\A#{whitespace_regexp}\.?endisomacro#{whitespace_regexp}\z/
+			
+			while line_i < state[:lines].size
+				break if state[:lines][line_i].match? endmacro_regexp # Check if it's an end macro instruction
+				def_lines << state[:lines][line_i]
+				line_i += 1
+			end
+			
+			
+			# Find insert indexes for each argument
+			arg_insert_locations = arg_names.map{|arg_name| [arg_name, []]}.to_h
+			
+			def_lines.each_with_index do |line, line_i|
+				
+				start_i = 0
+				
+				# Loop through each character starting position
+				while start_i < line.size					
+					
+					# Skip whitespace characters
+					if Kompiler::Config.whitespace_chars.include?(line[start_i])
+						start_i += 1
+						next
+					end
+					
+					# Skip string definitions
+					if Kompiler::Config.string_delimiters.include? line[start_i]
+						str, parsed_length = Kompiler::Parsers.parse_str line[start_i..]
+						start_i += parsed_length
+						next
+					end
+					
+					cut_line = line[start_i..]
+					
+					arg_found = false
+					
+					# Check if one of the argument names works
+					arg_names.each do |arg_name|
+						next if !cut_line.start_with?(arg_name) # Skip the argument if the line doesn't begin with it
+						next if Kompiler::Config.keyword_chars.include?(cut_line[arg_name.size]) # Skip if the argument is a partial word. So, for the argument 'arg', this will skip in the case of 'arg1'
+						# Here if the argument name should be replaced with the contents
+						arg_found = true # Indicate that a replacement was found						
+						
+						arg_insert_locations[arg_name] << [line_i, start_i] # Add the insert location to the list
+						
+						# start_i += arg_name.size
+						def_lines[line_i] = def_lines[line_i][...start_i] + (def_lines[line_i][(start_i+arg_name.size)..] || "")
+						line = def_lines[line_i]
+						
+						break # Skip the arguments loop
+					end
+					
+					# Check if an argument was found
+					# If not, skip the text until the next whitespace character
+					if !arg_found
+						while start_i < line.size && Kompiler::Config.keyword_chars.include?(line[start_i])
+							start_i += 1
+						end
+						start_i += 1 # Move one more character
+					end
+					
+				end
+				
+			end
+			
+			state[:extra_state][:isomacros] = Array.new if !state[:extra_state].keys.include?(:macros)
+			
+			state[:extra_state][:isomacros] << {name: macro_name, args: arg_names, def_lines: def_lines, arg_insert_locations: arg_insert_locations}
+			
+			
+			# Scan the lines after the macro for the macro call and replace it with the macro definition
+			
+			scan_lines = state[:lines][(state[:line_i] + def_lines.size + 1 + 1)..]
+			
+			line_i = 0
+			
+			# Re-group argument insert locations by line -> [index, arg index]			
+			
+			arg_insert_locations_regrouped = def_lines.size.times.map{[]}
+			
+			arg_insert_locations.each do |arg_name, insert_locations|
+				insert_locations.each do |line_i, char_i|
+					arg_insert_locations_regrouped[line_i] << [char_i, arg_names.index(arg_name)]
+				end
+			end
+			
+			
+			while line_i < scan_lines.size
+				keyword, operands = Kompiler::Parsers.extract_instruction_parts(scan_lines[line_i])
+				
+				# If parsing failed, move on to the next line
+				if keyword == false
+					line_i += 1
+					next
+				end
+				
+				# If the keyword isn't the macro's name, skip the line
+				if keyword != macro_name
+					line_i += 1
+					next
+				end
+				
+				# Here when the keyword matches the macro name
+				
+				# Check that the number of operands is correct
+				if operands.size != arg_names.size
+					raise "Incorrect use of the \"#{macro_name}\" macro - #{arg_names.size} operands expected, but #{operands.size} were given: Program build not possible."
+				end
+				
+				# Build the replacement lines for the macro call
+				build_lines = def_lines.map{|line| line.dup} # Copying strings inside array, because array.dup doesn't work for elements
+				
+				arg_insert_locations_regrouped.each_with_index do |locations, line_i|
+					# Sort the locations by the insert character from largest to smallest, so that the inserts are made from end to start
+					locations.sort_by{|el| el[0]}.reverse.each do |char_i, arg_index|
+						build_lines[line_i].insert char_i, operands[arg_index]
+					end
+				end
+				
+				build_lines.insert 0, ".namespace macro.#{macro_name}.#{SecureRandom.uuid.gsub('-', '')}"
+				build_lines << ".endnamespace"
+				
+				# Replace the macro call with the built lines
+				scan_lines = scan_lines[...line_i] + build_lines + scan_lines[(line_i + 1)..]
+				
+				# Skip the inserted macro
+				line_i += build_lines.size
+			end			
+			
+			state[:lines] = state[:lines][...(state[:line_i] + def_lines.size + 2)] + scan_lines
+			
+			state[:line_i] += def_lines.size + 2
+				
+			state
+		end
+	},
+	{
+		keyword: "info",
+		func: lambda do |operands, state|
+
+			begin
+				info_name = operands[0][:definition]
+				info_value = operands[1][:definition]
+			rescue
+				raise "Incorrect use of the \".info\" directive."
+			end
+			
+
 			state[:line_i] += 1
+
+			context_info = {}
+
+			context_info[:current_address] = state[:current_address]
+
+			context_info[:line_i] = state[:line_i]
+
+			state[:extra_state][:info_entries] ||= Hash.new
+
+			state[:extra_state][:info_entries][info_name] ||= Array.new
+
+			state[:extra_state][:info_entries][info_name] << {context_info: context_info, input_str: info_value, input_full: operands[1]}
+
+			state
+		end
+	},
+	{
+		keyword: "namespace",
+		func: lambda do |operands, state|
+
+			raise "Incorrect use of the \".namespace\" directive" if operands.size != 1
+
+			namespace_name = operands[0][:definition]
 			
+
+			namespace_lines = []
+
+			line_i = state[:line_i] + 1
+
+			whitespace_regexp = /[#{Kompiler::Config.whitespace_chars.join("|")}]*/
+			end_namespace_regexp = /\A#{whitespace_regexp}\.?endnamespace#{whitespace_regexp}\z/
+
+			start_namespace_regexp = /\A#{whitespace_regexp}\.?namespace/
+
+			namespace_level = 1
+
+			while line_i < state[:lines].size
+				if state[:lines][line_i].match?(end_namespace_regexp)
+					namespace_level -= 1
+				end
+				break if namespace_level == 0
+
+				# Indicates whether a line should be looked at and changed based on whether it's on the first level
+				line_change = namespace_level == 1
+
+				namespace_lines << [line_change, state[:lines][line_i]]
+
+				if state[:lines][line_i].match?(start_namespace_regexp)
+					namespace_level += 1
+				end
+
+				line_i += 1
+			end
+
+
+			raise "\".endnamespace\" was not found for \".namespace\"" if line_i == state[:lines].size
+
+	
+			# Collect the definitions that happen inside of the namespace
+			defs = []
+
+			namespace_lines.each do |line_info|
+
+				line_change, line = line_info
+
+				next if !line_change
+
+				keyword, operands = Kompiler::Parsers.extract_instruction_parts(line)
+
+				is_instruction = false
+				Kompiler::Architecture.instructions.each do |instr|
+					is_instruction = instr[:keyword] == keyword
+					break if is_instruction
+				end
+
+				next if is_instruction
+
+				keyword = "." + keyword if keyword[0] != "."
+
+
+				case keyword
+				when ".value"
+					value_name = operands[0]
+					defs << {type: "value", name: value_name}
+				when ".macro"
+					# Remove the ".macro"
+					macro_def = line.split(keyword)[1..].join(keyword)
+					macro_name, _ = Kompiler::Parsers.extract_instruction_parts(macro_def)
+					defs << {type: "macro", name: macro_name}
+				when ".label"
+					label_name = operands[0]
+					defs << {type: "label", name: label_name}
+				when ".namespace"
+					inside_namespace_name = operands[0]
+					defs << {type: "namespace", name: inside_namespace_name}
+				end
+
+			end
+			
+
+			# Create replacements for each definition inside of the namespace
+			
+			replacements = defs.map do |definition|
+				[definition[:name], namespace_name + "." + definition[:name]]
+			end.to_h
+			defs.each do |definition|
+				next if definition[:type] != "namespace"
+				replacements[definition[:name] + "."] = namespace_name + "." + definition[:name] + "."
+			end
+
+
+			# Replace all words in the namespace that are equal to replacement[:from] as replacement[:to]
+			# Logic same as .macro's
+
+			namespace_lines.each_with_index do |line_info, line_i|
+
+				line_change, line = line_info
+
+				next if !line_change
+				
+				start_i = 0
+				
+				# Loop through each character starting position
+				while start_i < line.size					
+					
+					# Skip whitespace characters
+					if Kompiler::Config.whitespace_chars.include?(line[start_i])
+						start_i += 1
+						next
+					end
+					
+					# Skip string definitions
+					if Kompiler::Config.string_delimiters.include? line[start_i]
+						str, parsed_length = Kompiler::Parsers.parse_str line[start_i..]
+						start_i += parsed_length
+						next
+					end
+					
+					cut_line = line[start_i..]
+					
+					skip_to_next_word = true
+					
+					# Check if one of the argument names works
+					replacements.each do |from, to|
+						next if !cut_line.start_with?(from) # Skip the argument if the line doesn't begin with it
+						next if Kompiler::Config.keyword_chars.include?(cut_line[from.size]) && from[-1] != "." # Skip if the argument is a partial word. So, for the argument 'arg', this will skip in the case of 'arg1'
+						# Here if the argument name should be replaced with the contents
+						skip_to_next_word = from[-1] == "." # Skip to the next word only if the replacement is a namespace call
+						
+						new_line = line[...start_i] + to + cut_line[from.size..]
+						
+						
+						start_i += to.size
+
+						namespace_lines[line_i] = [true, new_line]
+						line = namespace_lines[line_i]
+												
+						break # Skip the arguments loop
+					end
+					
+					# Check if an argument was found
+					# If not, skip the text until the next whitespace character
+					if skip_to_next_word
+						while start_i < line.size && Kompiler::Config.keyword_chars.include?(line[start_i])
+							start_i += 1
+						end
+						start_i += 1 # Move one more character
+					end
+					
+				end
+				
+			end	
+
+			namespace_lines.map!{_1[1]}
+
+			state[:lines] = state[:lines][...state[:line_i]] + namespace_lines + state[:lines][(state[:line_i] + namespace_lines.size + 2)..]
+
 			state
 		end
 	}
