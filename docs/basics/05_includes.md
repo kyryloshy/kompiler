@@ -1,5 +1,5 @@
 # The Basics, Part 5: Includes
-[Previous](/docs/basics/04_directives.md) [Next](/docs/basics/06_directives.md)
+[Previous](/docs/basics/04_directives.md) [Next](/docs/basics/06_macros.md)
 
 Containing a large program in a single file is usually hard and disorienting. To combat this, Kompiler has a few modularity features to improve development and maintaining or large systems.
 
@@ -96,4 +96,4 @@ mov x0, 0
 So, if main.s is designed to run first, and outside_file.s is just a library, use load_end or include_end!
 
 
-[Previous](/docs/basics/04_directives.md) [Next](/docs/basics/06_directives.md)
+[Previous](/docs/basics/04_directives.md) [Next](/docs/basics/06_macros.md)
