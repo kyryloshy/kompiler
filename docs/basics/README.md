@@ -2,7 +2,7 @@
 This directory showcases Kompiler's general syntax, types of operands, labels, features, and more.
 
 # Contents
- 1. [Syntax](/docs/basics/01_syntax.md) - Introduction to the basic syntax of Kompiler
+ 1. [Syntax](/docs/basics/01_syntax.md) - Introduction to the basic syntax and operand types of Kompiler
  2. [Instructions](/docs/basics/02_instructions.md) - Information on instructions and their behavior
  3. [Labels](/docs/basics/03_labels.md) - Explores different ways to define and use labels
  4. [Directives](/docs/basics/04_directives.md) - Explains available Kompiler directives
