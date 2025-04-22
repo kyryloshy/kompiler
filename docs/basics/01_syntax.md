@@ -36,6 +36,7 @@ Currently, immediate value operands can be denoted in four ways:
  - Binary: 0b00110011100
  - Hex: 0xf8a353bc
  - Character (ASCII encoding): 'a'
+ - [Expressions](#35-a-detailed-look-at-expressions): (1 << 10) | 0b10
  
 ### 3.3 String operands
 
@@ -52,5 +53,52 @@ An example label operand might look like this:
 ```
 label_name123
 ```
+
+### 3.5 A detailed look at expressions
+
+Expressions are a special type of immediate operands. They are of math-like form and can be very useful for improving readability and making programming easier.
+
+One important thing to understand is that **expressions are evaluated at compile-time**.
+
+An example of using an expression can look like this:
+```
+keyword operand1, 5 * 4 - 1
+```
+In the above expression, "5 * 4 - 2" is the second operand.
+Since expressions are compile-time evaluated, Kompiler will transform the above line into this:
+```
+keyword operand1, 19
+```
+Now, the second operand is simply 19.
+
+Here is a full list of operations that are supported by Kompiler:
+
+Grouping operation:
+ - Group an expression: (expression)
+
+Mathematical operations:
+ - Addition: a + b
+ - Subtraction: a - b
+ - Division: a / b
+ - Multiplication: a * b
+ - Negation: -a
+ - Factorial: a!
+ - Power: a ** b
+ - Modulo: a % b
+
+Bit manipulation:
+ - Bitwise left shift: a << b
+ - Bitwise right shift: a >> b
+ - Bitwise or: a | b
+ - Bitwise and: a & b
+
+Comparison operations (return 1 if true, 0 if false):
+ - Equal to: a == b
+ - Not equal to: a != b
+ - Less than: a < b
+ - Greater than: a > b
+ - Less than or equal to: a <= b
+ - Greater than or equal to: a >= b
+
 
 [Next](/docs/basics/02_instructions.md)
