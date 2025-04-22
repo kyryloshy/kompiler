@@ -1,7 +1,7 @@
 # The Basics, Part 6: Macros
-[Previous](/docs/basics/05_includes.md)
+[Previous](/docs/basics/05_includes.md) [Next](/docs/basics/07_namespaces.md)
 
-Sometimes you need to write the same big piece of code multiple times. Just pasting it in could feel builky and unnecessary. To aid this, Kompiler has multiple features to improve readability and elegance of your code.
+Sometimes you need to write the same big piece of code multiple times. Just pasting it in could feel bulky and unnecessary. To aid this, Kompiler has multiple features to improve readability and elegance of your code.
 
 ## Macros
 
@@ -70,7 +70,7 @@ This can be fixed with Kompiler's isolated macro feature.
 
 ## Isolated macro directive
 
-Isolated macros can solve the problem described above. They are defined the same way as macros are, except that you use the keywords ".isomacro" and ".endisomacro". This way Kompiler will place the "unwrapped" macro call in a unique namespace (see Part 7: Namespaces) every time.
+Isolated macros can solve the problem described above. They are defined the same way as macros are, except that you use the keywords ".isomacro" and ".endisomacro". This way Kompiler will place the "unwrapped" macro call in a unique namespace (see [Part 7: Namespaces](/docs/basics/07_namespaces.md)) every time.
 This way, the labels will be accessible form inside the namespace, but differ in between macro calls.
 Let's see an example:
 ```
@@ -143,4 +143,4 @@ adr special_register, special_label
 That's the end of Kompiler's basics. You can now start writing your own programs, or look at existing [examples](/docs/examples).
 
 
-[Previous](/docs/basics/05_includes.md)
+[Previous](/docs/basics/05_includes.md) [Next](/docs/basics/07_namespaces.md)
