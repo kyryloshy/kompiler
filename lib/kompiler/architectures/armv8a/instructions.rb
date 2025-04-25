@@ -23,6 +23,20 @@ end
 		bitsize: 32
 	},
 	{	keyword: "mov",
+		name: "Move (immediate, with shift)",
+		description: "Moves a shifted immediate value to the destination register.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination register"}, {type: "immediate", restrictions: {}, name: "Immediate value"}, {type: "immediate", name: "Shift amount (multiple of 16)"}],
+		mc_constructor: [
+			["if_eq_else", ["modulo", ["get_operand", 2], 16], 0, [], ["raise_error", "movk Error: Shift amount must be divisible by 16."]],
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
+			["get_bits", ["get_operand", 1], 0, 16],
+			["get_bits", ["divide", ["get_operand", 2], 16], 0, 2],
+			["bits", 1,0,1,0,0,1, 0,1],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], 0],
+		],
+		bitsize: 32
+	},
+	{	keyword: "mov",
 		name: "Move (register)",
 		description: "Copies the value in the source register to the destination register",
 		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination register"}, {type: "register", restrictions: {reg_type: "gpr"}, name: "Source register"}],
@@ -49,6 +63,34 @@ end
 			["get_bits", 0, 0, 12], # imm12 as ones
 			["bits", 0, 0,1,0,0,0,1, 0, 0],
 			["case", ["get_key", ["get_var", "non_sp_reg"], :reg_size], 64, ["bits", 1], 32, ["bits", 0], 0],
+		],
+		bitsize: 32
+	},
+	{
+		keyword: "movk",
+		name: "Move with keep (immediate)",
+		description: "Moves a 16-bit immediate value to the destination register, keeping other bits unchanged.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination register"}, {type: "immediate", restrictions: {}, name: "Immediate value"}],
+		mc_constructor: [
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
+			["get_bits", ["get_operand", 1], 0, 16],
+			["bits", 0,0, 1,0,1,0,0,1, 1,1],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], 0],
+		],
+		bitsize: 32
+	},
+	{
+		keyword: "movk",
+		name: "Move with keep (immediate, with shift)",
+		description: "Moves a shifted 16-bit immediate value to the destination register, keeping other bits unchanged.",
+		operands: [{type: "register", restrictions: {reg_type: "gpr"}, name: "Destination register"}, {type: "immediate", restrictions: {}, name: "Immediate value"}, {type: "immediate", name: "Shift amount (multiple of 16)"}],
+		mc_constructor: [
+			["if_eq_else", ["modulo", ["get_operand", 2], 16], 0, [], ["raise_error", "movk Error: Shift amount must be divisible by 16."]],
+			["get_bits", ["encode_gp_register", ["get_operand", 0]], 0, 5],
+			["get_bits", ["get_operand", 1], 0, 16],
+			["get_bits", ["divide", ["get_operand", 2], 16], 0, 2],
+			["bits", 1,0,1,0,0,1, 1,1],
+			["case", ["get_key", ["get_operand", 0], :reg_size], 64, ["bits", 1], 32, ["bits", 0], 0],
 		],
 		bitsize: 32
 	},
