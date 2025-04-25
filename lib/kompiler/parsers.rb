@@ -436,7 +436,7 @@ def self.match_parsed_line_to_instruction(parsed_line, instruction)
 	keyword, operands = parsed_line
 
 	# Check if the keyword matches
-	if instruction[:keyword] != keyword
+	if instruction[:keyword] != keyword && !(instruction[:aliases] != nil && instruction[:aliases].include?(keyword))
 		return [false, nil]
 	end
 

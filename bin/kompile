@@ -26,9 +26,17 @@ arg_letters = []
 
 current_i = 0
 
-permitted_word_chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a + ["_", ".", "-"]
+permitted_word_chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a + ["_", ".", "-", "[", "]"]
 
 whitespace_chars = ["\t", " "]
+
+
+$positive_opts = ["true", "yes"]
+$negative_opts = ["false", "no"]
+
+$bool_opts = $positive_opts + $negative_opts
+
+
 
 def get_word string, permitted_word_chars, offset = 0
 	if string[0] == '"'
@@ -77,7 +85,17 @@ while current_i < arg_string.size
 		
 		letters, current_i = get_word(arg_string, permitted_word_chars, current_i)
 
-		arg_letters += letters.chars
+		if arg_string[current_i] == "="
+			current_i += 1
+			value, current_i = get_word(arg_string, permitted_word_chars, current_i)
+
+			arg_keys << [letters, value]
+		elsif whitespace_chars.include?(arg_string[current_i]) || current_i == arg_string.size
+			arg_letters += letters.chars
+		else
+			puts "Unrecognized argument syntax at index #{current_i}"
+			exit
+		end
 
 		next
 	end
@@ -85,6 +103,44 @@ while current_i < arg_string.size
 	
 	word, current_i = get_word(arg_string, permitted_word_chars, current_i)	
 	arg_words << word
+end
+
+
+
+
+
+def get_number str
+	bool, val = Kompiler::Parsers.check_immediate_operand(str)
+	return (bool == false) ? nil : val
+end
+
+
+def get_arg_key arg_keys, keys, default_value=0
+	keys = [keys] if !keys.is_a?(Array)
+	filtered = arg_keys.filter{keys.include? _1[0]}[0]
+	value = (filtered != nil) ? filtered[1] : default_value
+	return value
+end
+
+
+class String
+	def to_num
+		status, val = Kompiler::Parsers.check_immediate_operand(self)
+		return (status == false) ? nil : val[:value]
+	end
+end
+
+
+def is_bool_opt opt
+	$bool_opts.include?(opt)
+end
+
+def is_pos_bool opt
+	$positive_opts.include? opt
+end
+
+def is_neg_bool opt
+	$negative_opts.include? opt
 end
 
 
@@ -100,8 +156,10 @@ Compile a file:
  output_file            Path to the output file (optional, default is out.bin)
 
 Compilation options:
- --arch=<arch_name>     Compile for the specified architecture (optional, default is armv8a)
- --wrap=<format>        Wrap the compiled program in the specified format (default is none)
+ --arch=<arch_name>, -ar    Compile for the specified architecture (optional, default is armv8a)
+ --wrap=<format>, -w        Wrap the compiled program in the specified format (default is none)
+ --no-aliases, -n           Specifies whether to use the aliases configuration file (default is yes)
+ --aliases-file=<file>, -a  Loads the provided aliases file instead of the usual one
 
 Available wrapping formats:
  none
@@ -111,31 +169,157 @@ Available wrapping formats:
  mach-o.exec
  
 Additional options for wrapping are:
- --elf-machine=<type>                 Specifies ELF header's e_machine to be the type provided (default is 0)
- --elf-class=<class>                  Specifies the ELF file's class to either 32 or 64 (default is 64)
- --mach-o-machine=<cputype.subtype>   Specifies Mach-O header's cputype and subtype
-                                      to be the type provided
- --mach-o-archtype=<type>             Specifies the file architecture type to either 32 or 64 (default is 64)
- --exec-type=<type>                   Used with --wrap=mach-o.exec. Specifies whether the executable is
-                                      statically (static) or dynamically (dylink) linked (default is dylink)
- --mach-o-threadstate=<type>          Used with --wrap=mach-o.exec and --exec-type=static. Specifies which
-                                      thread state type to use (arm64, arm32, x86-64 or x86-32)
- --codesign=<bool>                    Used with --wrap=mach-o.*. Specifies whether to add a basic
-                                      code signature to the Mach-O file (default is false)
+ --elf-machine=<type>, -m                Specifies ELF header's e_machine to be the type provided (default is 0)
+ --elf-class=<class>, -c                 Specifies the ELF file's class to either 32 or 64 (default is 64)
+ --mach-o-machine=<cputype.subtype>, -m  Specifies Mach-O header's cputype and subtype
+                                         to be the type provided
+ --mach-o-archtype=<type>, -t            Specifies the file architecture type to either 32 or 64 (default is 64)
+ --exec-type=<type>, -et                 Used with --wrap=mach-o.exec. Specifies whether the executable is
+                                         statically (static) or dynamically (dylink) linked (default is dylink)
+ --mach-o-threadstate=<type>, -ts        Used with --wrap=mach-o.exec and --exec-type=static. Specifies which
+                                         thread state type to use (arm64, arm32, x86-64 or x86-32)
+ --codesign=<yes|no>, -cs                Used with --wrap=mach-o.*. Specifies whether to add a basic
+                                         code signature to the Mach-O file (default is no)
 
 Available options:
- --help, -h                 Prints this information
- --list-architectures       Lists available architectures
- --list-instructions [arch] Lists available instructions for the specified architecture
- --list-registers [arch]    Lists available registers for the specified architecture
- --list-lexis               Lists available lexis entries
+ --help, -h                      Prints this information
+ --list-architectures,-lar       Lists available architectures
+ --list-instructions [arch],-li  Lists available instructions for the specified architecture
+ --list-registers [arch],-lr     Lists available registers for the specified architecture
+ --list-aliases,-la              Lists instruction aliases in the current configuration
+ --compact,-c                    Used with --list-instructions or --list-registers to print compact information
+
+Available options for controlling aliases:
+ --add-alias[es] index keyword aliases    Add the specified aliases to the configuration
+ --remove-alias[es] index keyword aliases Remove the specified aliases from the configuration
+ --reset-aliases                          Resets aliases to an empty configuration
+ --import-aliases filename                Set the provided configuration as the default aliases
+ --export-aliases filename                Export the default aliases into a file
 """
 exit # Exit
 end
 
+no_aliases = arg_opts.include?("no-aliases") || arg_letters.include?("n")
+
+arg_opts.delete "no-aliases"
+arg_letters.delete "n"
+
+use_aliases = !no_aliases
+
+aliases_file = get_arg_key(arg_keys, ["aliases-file", "a"], nil)
+
+if aliases_file
+	aliases_file = File.expand_path(aliases_file)
+end
+
+if use_aliases
+	if aliases_file
+		Kompiler::AliasManager.import_aliases_file aliases_file
+	else
+		Kompiler::AliasManager.load_aliases()
+	end
+end
+
+
+if arg_opts == ["add-aliases"] || arg_opts == ["add-alias"]
+	idx = arg_words[0]
+	keyword = arg_words[1]
+	aliases = arg_words[2..]
+	if idx[0] == "[" && idx[-1] == "]"
+		idx = idx[1...-1]
+	end
+	idx = idx.to_i
+
+	Kompiler::AliasManager.add_alias idx, keyword, *aliases
+
+	if aliases_file
+		Kompiler::AliasManager.export_aliases_file aliases_file
+	else
+		Kompiler::AliasManager.save_aliases()
+	end
+	
+	exit
+end
+
+if arg_opts == ["remove-aliases"] || arg_opts == ["remove-alias"]
+	idx = arg_words[0]
+	keyword = arg_words[1]
+	aliases = arg_words[2..]
+	if idx[0] == "[" && idx[-1] == "]"
+		idx = idx[1...-1]
+	end
+	idx = idx.to_i
+
+	Kompiler::AliasManager.remove_alias idx, keyword, *aliases
+
+	if aliases_file
+		Kompiler::AliasManager.export_aliases_file aliases_file
+	else
+		Kompiler::AliasManager.save_aliases()
+	end
+	
+	exit
+end
+
+
+if arg_opts == ["reset-aliases"]
+	Kompiler::AliasManager.reset_aliases()
+	
+	if aliases_file
+		Kompiler::AliasManager.export_aliases_file aliases_file
+	else
+		Kompiler::AliasManager.save_aliases()
+	end
+	
+	exit
+end
+
+
+if arg_opts == ["import-aliases"]
+	filename = arg_words[0]
+	if filename == nil
+		puts "kompile: A file path must be provided with --aliases-import."
+		puts "Type \"kompile --help\" for more information."
+		exit
+	end
+	filename = File.expand_path(filename)
+	if !File.exist?(filename)
+		puts "kompile: File \"#{filename}\" does not exist."
+		exit
+	end
+	Kompiler::AliasManager.import_aliases_file(filename)
+	Kompiler::AliasManager.save_aliases()
+
+	exit
+end
+
+if arg_opts == ["export-aliases"]
+	filename = arg_words[0]
+	if filename == nil
+		puts "kompile: A file path must be provided with --aliases-import."
+		puts "Type \"kompile --help\" for more information."
+		exit
+	end
+	filename = File.expand_path(filename)
+
+	Kompiler::AliasManager.export_aliases_file(filename)
+
+	exit
+end
+
+if arg_opts.include?("list-aliases") || arg_letters == ["l", "a"]
+	max_index = Kompiler::AliasManager.aliases.map{_1[:index]}.max
+	pad_width = max_index.to_s.size + 2
+	Kompiler::AliasManager.aliases.each do |alias_entry|
+		idx_string = alias_entry[:index].to_s
+		puts "[#{idx_string}]" + " " * (pad_width - idx_string.size) + "#{alias_entry[:keyword]}: " + alias_entry[:aliases].join(" ")
+	end
+	exit
+end
+
 
 # Print the available architectures if requested
-if arg_opts == ["list-architectures"]
+if arg_opts.include?("list-architectures") || arg_letters == ["l", "a", "r"]
 	Kompiler::ArchManager.load_all_entries()
 	puts "Available architectures:"
 	
@@ -145,35 +329,82 @@ if arg_opts == ["list-architectures"]
 	exit # Exit
 end
 
-if arg_opts == ["list-instructions"]
+if arg_opts.include?("list-instructions") || arg_letters[...2] == ["l", "i"]
 	arch_name = arg_words[0] || "armv8a"
 	Kompiler::ArchManager.load_all_entries()
 	Kompiler::ArchManager.load_arch arch_name
 
-	Kompiler::Architecture.instructions.each do |instruction|
-		print instruction[:keyword]
+	Kompiler::AliasManager.apply_aliases()
 
-		print " "
+	if !(arg_opts.include?("compact") || arg_letters.include?("c"))
 
-		puts instruction[:operands].map{"<" + (_1[:name] || _1[:type] || "") + ">"}.join(" ")
+		# Calculate the size of the index column
+		idx_col_width = [7, (Kompiler::Architecture.instructions.length + 1).to_s.size + 3].max
 
-		puts instruction[:description]
+		console_width = IO.console.winsize[1] rescue 80
 
-		print "\n"
+		desc_col_width = console_width - idx_col_width
+
+		desc_col_padding = " " * idx_col_width
+
+		Kompiler::Architecture.instructions.each_with_index do |instruction, index|
+
+			display_index = (index + 1).to_s
+
+			print "[#{display_index}]"
+
+			print " " * (idx_col_width - 2 - display_index.bytesize)
+			
+			print instruction[:keyword]
+
+			print " "
+
+			puts instruction[:operands].map{"<" + (_1[:name] || _1[:type] || "") + ">"}.join(" ")
+
+			desc = instruction[:description] || ""
+		
+			puts desc_col_padding + desc
+					
+
+			if instruction.keys.include?(:aliases) && instruction[:aliases].size > 0
+				aliases_str = "Aliases: " + instruction[:aliases].join(" ")
+				puts desc_col_padding + aliases_str
+			end
+
+			print "\n"
+		end
+
+	else
+
+		strings = []
+
+		Kompiler::Architecture.instructions.each_with_index do |instruction, index|
+			str = "#{index + 1} #{instruction[:keyword]}"
+			strings << str
+		end
+
+		puts strings.join(", ")
+
 	end
 
 	exit
 end
 
-if arg_opts == ["list-registers"]
+
+
+
+
+if arg_opts.include?("list-registers") || arg_letters[...2] == ["l", "r"]
 	arch_name = arg_words[0] || "armv8a"
 	Kompiler::ArchManager.load_all_entries()
-	arch = Kompiler::ArchManager.get_arch(arch_name)
+	Kompiler::ArchManager.load_arch(arch_name)
 
-	require arch[:include_path]
-
-	Kompiler::Architecture.registers.each do |reg|
-		puts "#{reg[:reg_name]}"
+	if !(arg_opts.include?("compact") || arg_letters.include?("c"))
+		Kompiler::Architecture.registers.each do |reg|
+			puts "#{reg[:reg_name]}"
+		end
+	else
+		puts Kompiler::Architecture.registers.map{_1[:reg_name]}.join(", ")
 	end
 
 	exit
@@ -210,19 +441,7 @@ end
 
 
 
-
-wrap_opt = arg_keys.select{_1[0] == "wrap"}
-
-
-if wrap_opt.size > 1
-	puts "kompile: Only one wrapping option can be provided with \"--wrap\"."
-	puts "Type \"kompile --help\" for more information."
-	exit
-elsif wrap_opt.size == 1
-	wrap_opt = wrap_opt[0][1]
-else
-	wrap_opt = "none"
-end
+wrap_opt = get_arg_key(arg_keys, ["wrap", "w"], "none")
 
 
 if !["elf.obj", "elf.exec", "mach-o.obj", "mach-o.exec", "none"].include?(wrap_opt)
@@ -233,18 +452,8 @@ end
 
 
 
+arch_name = get_arg_key(arg_keys, ["arch", "ar"], "armv8a")
 
-arch_opt = arg_keys.select{_1[0] == "arch"}
-
-if arch_opt.size > 1
-	puts "kompile: Only one architecture can be provided with \"--arch\"."
-	puts "Type \"kompile --help\" for more information."
-	exit
-elsif arch_opt.size == 1
-	arch_name = arch_opt[0][1]
-else
-	arch_name = "armv8a"
-end
 
 
 # Load all the architecture entries
@@ -270,6 +479,11 @@ end
 
 
 
+Kompiler::AliasManager.apply_aliases()
+
+Kompiler::Architecture.optimize
+
+
 code = File.binread(in_filename)
 
 detailed_out = Kompiler::CompilerFunctions.detailed_compile(code)
@@ -284,26 +498,6 @@ labels = detailed_out[:labels]
 labels.delete "here"
 
 
-def get_number str
-	bool, val = Kompiler::Parsers.check_immediate_operand(str)
-	return (bool == false) ? nil : val
-end
-
-
-def get_arg_key arg_keys, key, default_value=0
-	filtered = arg_keys.filter{_1[0] == key}[0]
-	value = (filtered != nil) ? filtered[1] : default_value
-	return value
-end
-
-
-class String
-	def to_num
-		status, val = Kompiler::Parsers.check_immediate_operand(self)
-		return (status == false) ? nil : val[:value]
-	end
-end
-
 
 add_exec_permission = false
 
@@ -312,8 +506,8 @@ case wrap_opt
 when "none"
 	out = code
 when "elf.obj"
-	elf_machine = get_arg_key(arg_keys, "elf-machine", "0").to_num
-	elf_class = get_arg_key(arg_keys, "elf-class", "64").to_num
+	elf_machine = get_arg_key(arg_keys, ["elf-machine", "m"], "0").to_num
+	elf_class = get_arg_key(arg_keys, ["elf-class", "c"], "64").to_num
 
 	if ![32, 64].include?(elf_class)
 		puts "kompile: Invalid ELF class specified."
@@ -326,8 +520,8 @@ when "elf.obj"
 when "elf.exec"
 	vaddr = 0x80000
 
-	elf_machine = get_arg_key(arg_keys, "elf-machine", "0").to_num
-	elf_class = get_arg_key(arg_keys, "elf-class", "64").to_num
+	elf_machine = get_arg_key(arg_keys, ["elf-machine", "m"], "0").to_num
+	elf_class = get_arg_key(arg_keys, ["elf-class", "c"], "64").to_num
 
 	if ![32, 64].include?(elf_class)
 		puts "kompile: Invalid ELF class specified."
@@ -342,7 +536,7 @@ when "elf.exec"
 	add_exec_permission = true
 	
 when "mach-o.obj"
-	macho_cpu = get_arg_key(arg_keys, "mach-o-machine", "0.0")
+	macho_cpu = get_arg_key(arg_keys, ["mach-o-machine", "m"], "0.0")
 	cputype, cpusubtype = macho_cpu.split(".").map(&:to_num)
 
 	if [cputype, cpusubtype].include? nil
@@ -351,21 +545,21 @@ when "mach-o.obj"
 		exit
 	end
 
-	arch_type = get_arg_key(arg_keys, "mach-o-archtype", "64").to_num
+	arch_type = get_arg_key(arg_keys, ["mach-o-archtype", "at"], "64").to_num
 
-	codesign = get_arg_key(arg_keys, "codesign", "false")
-	if !["true", "false"].include?(codesign)
+	codesign = get_arg_key(arg_keys, ["codesign", "cs"], "false")
+	if !is_bool_opt(codesign)
 		puts "kompile: Invalid --codesign value."
 		puts "Type \"kompile --help\" for more information."
 		exit
 	end
 
-	codesign = (codesign == "true")
+	codesign = is_pos_bool(codesign)
 
 	symbols = Kompiler::Wrappers::MachO.labels_to_symbols(labels)
 	out = Kompiler::Wrappers::MachO.wrap_obj(code, symbols, cputype: cputype, cpusubtype: cpusubtype, arch_type: arch_type)
 when "mach-o.exec"
-	macho_cpu = get_arg_key(arg_keys, "mach-o-machine", "0.0")
+	macho_cpu = get_arg_key(arg_keys, ["mach-o-machine", "m"], "0.0")
 	cputype, cpusubtype = macho_cpu.split(".").map(&:to_num)
 
 	if [cputype, cpusubtype].include? nil
@@ -374,19 +568,19 @@ when "mach-o.exec"
 		exit
 	end
 
-	arch_type = get_arg_key(arg_keys, "mach-o-archtype", "64").to_num
+	arch_type = get_arg_key(arg_keys, ["mach-o-archtype", "t"], "64").to_num
 
-	exec_type = get_arg_key(arg_keys, "exec-type", "dylink")
-
-
-	codesign = get_arg_key(arg_keys, "codesign", "false")
-	if !["true", "false"].include?(codesign)
+	codesign = get_arg_key(arg_keys, ["codesign", "cs"], "false")
+	if !is_bool_opt(codesign)
 		puts "kompile: Invalid --codesign value."
 		puts "Type \"kompile --help\" for more information."
 		exit
 	end
 
-	codesign = (codesign == "true")
+	exec_type = get_arg_key(arg_keys, ["exec-type", "et"], "dylink")
+
+
+	codesign = is_pos_bool(codesign)
 
 
 	case exec_type
@@ -396,7 +590,7 @@ when "mach-o.exec"
 	when "static"
 		symbols = Kompiler::Wrappers::MachO.labels_to_symbols(labels)
 
-		thread_state_arch = get_arg_key(arg_keys, "mach-o-threadstate", "arm64")
+		thread_state_arch = get_arg_key(arg_keys, ["mach-o-threadstate", "ts"], "arm64")
 
 		entry_address = 0x1000000
 
