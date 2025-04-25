@@ -481,7 +481,6 @@ end
 
 Kompiler::AliasManager.apply_aliases()
 
-Kompiler::Architecture.optimize
 
 
 code = File.binread(in_filename)
