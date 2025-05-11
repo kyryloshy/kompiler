@@ -537,11 +537,11 @@ module SymAST
 					
 					operation_found = true
 					
-					ast_node = {type: "operation", op_type: operation[:name], elements: }
+					ast_node = {type: "operation", op_type: operation[:name], elements: elements}
 					
 					tokens = tokens[...(token_i - 1)] + [ast_node] + tokens[(token_i + 1 + 1)..]
 					
-					# token_i += token_i_change
+					token_i += token_i_change
 					
 					break
 				end
